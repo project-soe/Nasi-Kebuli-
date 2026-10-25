@@ -1,0 +1,355 @@
+/* =====================================================
+   animations.css - Semua keyframes dan kelas gerakan
+   Prinsip: halus dan terukur. Hanya transform + opacity
+   (ringan untuk HP). Durasi dan kurva dari tokens.css.
+   Dimuat setelah components.css.
+
+   Kelas status yang dipasang oleh JavaScript:
+     html.js          -> dipasang inline di <head> (lihat catatan Reveal)
+     .is-visible      -> reveal.js / home.js saat elemen masuk layar
+     .is-bump         -> cart.js saat jumlah keranjang berubah
+     .is-added        -> menu-card.js setelah tombol tambah ditekan
+     .is-leaving      -> toast.js sebelum toast dihapus
+     .is-closing      -> modal.js sebelum modal dihapus
+   ===================================================== */
+
+/* =====================================================
+   KEYFRAMES DASAR (dipakai components.css)
+   ===================================================== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes dot-pulse {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  70%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+@keyframes shimmer {
+  to { background-position: -200% 0; }
+}
+
+/* =====================================================
+   ANIMASI PEMBUKA (SPLASH) - total sekitar 2 detik
+   Murni CSS, jalan sendiri tanpa JavaScript.
+   JS hanya menambah .is-skipped bila sudah pernah tampil
+   dalam sesi ini (sessionStorage).
+   ===================================================== */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-splash);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, var(--color-cokelat-700) 0%, var(--color-cokelat-900) 70%);
+  color: var(--color-krem-100);
+  animation: splash-out 600ms var(--ease-in-out) 1.6s forwards;
+}
+
+.splash.is-skipped {
+  display: none;
+}
+
+.splash__inner {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  text-align: center;
+}
+
+.splash__mark {
+  width: 84px;
+  height: 84px;
+  color: var(--color-emas-500);
+  animation: splash-mark 900ms var(--ease-pegas) 100ms both;
+}
+
+.splash__title {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: 0.04em;
+  animation: rise-in 700ms var(--ease-out) 450ms both;
+}
+
+.splash__sub {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-emas-500);
+  animation: rise-in 700ms var(--ease-out) 700ms both;
+}
+
+/* garis emas yang "menggambar" dirinya */
+.splash__line {
+  width: 120px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-emas-500), transparent);
+  transform-origin: center;
+  animation: line-draw 800ms var(--ease-out) 900ms both;
+}
+
+@keyframes splash-mark {
+  from { opacity: 0; transform: scale(0.6) rotate(-12deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes line-draw {
+  from { transform: scaleX(0); opacity: 0; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes splash-out {
+  0%   { opacity: 1; visibility: visible; }
+  100% { opacity: 0; visibility: hidden; pointer-events: none; }
+}
+
+/* =====================================================
+   MUNCUL BERTAHAP
+   ===================================================== */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Reveal saat di-scroll.
+   PENTING: aturan ini hanya aktif bila <html class="js">, agar konten
+   tidak hilang jika JavaScript gagal. Pasang di <head> setiap halaman:
+   <script>document.documentElement.classList.add('js')</script>      */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity var(--dur-lambat) var(--ease-out),
+    transform var(--dur-lambat) var(--ease-out);
+  /* jeda bertingkat: style="--i: 2" pada elemen */
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* animasi masuk halaman untuk bagian hero */
+.hero-anim {
+  animation: rise-in 800ms var(--ease-out) both;
+  animation-delay: calc(2s + var(--i, 0) * 120ms);   /* menunggu splash selesai */
+}
+
+/* bila splash dilewati, tidak perlu menunggu */
+.splash-skipped .hero-anim {
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+
+/* uap tipis di atas nasi (hiasan hero, sangat halus) */
+@keyframes steam {
+  0%   { opacity: 0;   transform: translateY(12px) scaleX(1); }
+  40%  { opacity: 0.5; }
+  100% { opacity: 0;   transform: translateY(-36px) scaleX(1.25); }
+}
+
+.steam {
+  display: inline-block;
+  width: 10px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(to top, rgba(246, 235, 211, 0.55), transparent);
+  filter: blur(3px);
+  animation: steam 3.2s ease-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.8s);
+}
+
+/* =====================================================
+   KERANJANG
+   ===================================================== */
+
+/* angka dan ikon keranjang memantul saat isi berubah */
+@keyframes cart-bump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35) rotate(-6deg); }
+  65%  { transform: scale(0.92) rotate(3deg); }
+  100% { transform: scale(1)    rotate(0); }
+}
+
+.is-bump {
+  animation: cart-bump 420ms var(--ease-out);
+}
+
+/* bar keranjang bawah naik masuk saat item pertama ditambah */
+@keyframes bar-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.bottom-bar.is-entering {
+  animation: bar-up var(--dur-normal) var(--ease-out) both;
+}
+
+/* titik emas "terbang" dari tombol ke keranjang.
+   cart.js membuat elemen .fly-dot lalu mengisi variabel
+   --dx dan --dy (jarak ke ikon keranjang), kemudian menghapusnya
+   setelah animationend. */
+@keyframes fly-to-cart {
+  0%   { opacity: 1; transform: translate(0, 0) scale(1); }
+  70%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+}
+
+.fly-dot {
+  position: fixed;
+  z-index: var(--z-toast);
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--color-emas-400), var(--color-emas-600));
+  box-shadow: 0 0 12px rgba(201, 162, 75, 0.7);
+  pointer-events: none;
+  animation: fly-to-cart 650ms var(--ease-in-out) forwards;
+}
+
+/* tombol tambah berubah sesaat menjadi "Ditambahkan" dengan centang */
+@keyframes check-pop {
+  0%   { transform: scale(0) rotate(-30deg); }
+  60%  { transform: scale(1.3) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+.btn.is-added {
+  background-color: var(--color-sukses);
+}
+
+.btn.is-added .btn__icon {
+  animation: check-pop 380ms var(--ease-pegas);
+}
+
+/* =====================================================
+   TOAST
+   ===================================================== */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes toast-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.96); }
+}
+
+.toast {
+  animation: toast-in var(--dur-normal) var(--ease-pegas) both;
+}
+
+.toast.is-leaving {
+  animation: toast-out var(--dur-cepat) var(--ease-in-out) forwards;
+}
+
+/* =====================================================
+   MODAL
+   ===================================================== */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+@keyframes sheet-down {
+  to { transform: translateY(100%); }
+}
+
+.modal__backdrop {
+  animation: fade-in var(--dur-normal) var(--ease-out) both;
+}
+
+.modal__panel {
+  animation: sheet-up var(--dur-normal) var(--ease-out) both;
+}
+
+.modal.is-closing .modal__backdrop {
+  animation: fade-in var(--dur-cepat) var(--ease-in-out) reverse forwards;
+}
+
+.modal.is-closing .modal__panel {
+  animation: sheet-down var(--dur-cepat) var(--ease-in-out) forwards;
+}
+
+/* =====================================================
+   STATUS TOKO & PESANAN
+   ===================================================== */
+
+/* perubahan status (buka -> tutup) berkedip lembut satu kali */
+@keyframes status-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 162, 75, 0); }
+  50%      { box-shadow: 0 0 0 8px rgba(201, 162, 75, 0.35); }
+}
+
+.badge.is-changed {
+  animation: status-flash 900ms var(--ease-out) 2;
+}
+
+/* garis penanda langkah pesanan terisi */
+@keyframes fill-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.progress-fill {
+  transform-origin: left center;
+  animation: fill-x var(--dur-lambat) var(--ease-out) both;
+}
+
+/* =====================================================
+   HORMATI PENGGUNA YANG MEMATIKAN ANIMASI
+   Token durasi sudah 0ms (tokens.css), tetapi keyframes
+   berdurasi tetap harus dimatikan di sini.
+   ===================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    display: none;
+  }
+
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .hero-anim,
+  .steam,
+  .is-bump,
+  .fly-dot,
+  .toast,
+  .modal__backdrop,
+  .modal__panel,
+  .badge--open .badge__dot::after,
+  .badge.is-changed,
+  .progress-fill,
+  .bottom-bar.is-entering {
+    animation: none !important;
+  }
+
+  .btn.is-added .btn__icon {
+    animation: none;
+  }
+
+  /* spinner tetap berputar karena menandakan proses berjalan */
+}
+
+/* =====================================================
+   MODAL DI TENGAH (tablet/desktop)
+   Dipakai oleh responsive.css lewat animation-name.
+   ===================================================== */
+@keyframes modal-pop {
+  from { opacity: 0; transform: translateY(12px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes modal-pop-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.97); }
+}

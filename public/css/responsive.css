@@ -1,0 +1,239 @@
+/* =====================================================
+   responsive.css - Penyesuaian tablet dan desktop
+   Dasar (mobile-first) sudah ada di file lain; di sini hanya
+   hal yang BERUBAH saat layar lebih lebar.
+   Breakpoint (harus konsisten, lihat tokens.css):
+     tablet  : min-width: 768px
+     desktop : min-width: 1100px
+   Dimuat PALING AKHIR setelah pages/*.css.
+   ===================================================== */
+
+/* =====================================================
+   TABLET (>= 768px)
+   ===================================================== */
+@media (min-width: 768px) {
+  :root {
+    --container-pad: var(--space-6);
+    --header-h: 72px;
+  }
+
+  .section {
+    padding-block: var(--space-8);
+  }
+
+  /* menu: 2 kolom */
+  .grid-menu {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+
+  /* filter kategori tidak perlu digeser lagi */
+  .filter-bar {
+    justify-content: center;
+    overflow-x: visible;
+  }
+
+  /* modal tampil di tengah layar, bukan lembar dari bawah */
+  .modal {
+    align-items: center;
+    padding: var(--space-5);
+  }
+
+  .modal__panel {
+    border-radius: var(--radius-lg);
+    padding-bottom: var(--space-5);
+    animation-name: modal-pop;
+  }
+
+  .modal__panel::before {
+    display: none;          /* garis geser tidak diperlukan */
+  }
+
+  .modal.is-closing .modal__panel {
+    animation-name: modal-pop-out;
+  }
+
+  .modal__actions {
+    flex-direction: row-reverse;
+  }
+
+  .modal__actions > * {
+    flex: 1;
+  }
+
+  /* footer 3 kolom rata kiri */
+  .site-footer__grid {
+    grid-template-columns: repeat(3, 1fr);
+    text-align: left;
+  }
+
+  .toast {
+    max-width: 480px;
+  }
+}
+
+/* =====================================================
+   DESKTOP (>= 1100px)
+   ===================================================== */
+@media (min-width: 1100px) {
+  :root {
+    --container-pad: var(--space-7);
+  }
+
+  /* menu: 3 kolom */
+  .grid-menu {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* navigasi header tampil */
+  .site-nav {
+    display: block;
+  }
+
+  .site-nav__list a {
+    position: relative;
+    padding-block: var(--space-2);
+    font-weight: var(--fw-medium);
+    color: var(--text-on-dark);
+  }
+
+  /* garis emas bergeser masuk di bawah tautan saat hover */
+  .site-nav__list a::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background-color: var(--color-emas-500);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur-normal) var(--ease-out);
+  }
+
+  .site-nav__list a:hover {
+    color: var(--color-emas-400);
+  }
+
+  .site-nav__list a:hover::after,
+  .site-nav__list a[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+
+  /* bar keranjang menjadi kartu melayang di kanan bawah */
+  .bottom-bar {
+    left: auto;
+    right: var(--space-6);
+    bottom: var(--space-6);
+    width: 400px;
+    min-height: 0;
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--color-emas-500);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .toast-region {
+    bottom: var(--space-6);
+  }
+
+  /* checkout: form di kiri, ringkasan menempel di kanan */
+  .split {
+    grid-template-columns: 1.4fr 1fr;
+    gap: var(--space-7);
+    align-items: start;
+  }
+
+  .split > .order-summary {
+    position: sticky;
+    top: calc(var(--header-h) + var(--space-5));
+  }
+}
+
+/* =====================================================
+   LAYAR SANGAT KECIL (< 360px)
+   ===================================================== */
+@media (max-width: 359px) {
+  :root {
+    --container-pad: var(--space-3);
+  }
+
+  .btn {
+    padding-inline: var(--space-4);
+  }
+}
+
+/* =====================================================
+   HP LANDSCAPE (tinggi pendek)
+   Splash dan bar tidak boleh memakan layar.
+   ===================================================== */
+@media (max-height: 480px) and (orientation: landscape) {
+  :root {
+    --header-h: 52px;
+    --bottom-bar-h: 60px;
+  }
+
+  .splash__mark {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* =====================================================
+   CETAK (nota pesanan)
+   ===================================================== */
+@media print {
+  .site-header,
+  .site-footer,
+  .bottom-bar,
+  .toast-region,
+  .splash {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
+
+/* =====================================================
+   HALAMAN BERANDA (pages/home.css)
+   ===================================================== */
+@media (min-width: 768px) {
+  .hero {
+    padding-block: var(--space-8) var(--space-9);
+  }
+
+  .hero__actions {
+    flex-direction: row;
+    max-width: none;
+    width: auto;
+    justify-content: center;
+  }
+
+  .hero__actions .btn {
+    width: auto;
+  }
+
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1100px) {
+  .hero__grid {
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: var(--space-8);
+  }
+
+  .hero__content {
+    text-align: left;
+    justify-items: start;
+  }
+
+  .hero__status,
+  .hero__actions {
+    justify-content: flex-start;
+  }
+}

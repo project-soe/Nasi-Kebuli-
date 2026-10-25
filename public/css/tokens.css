@@ -1,0 +1,136 @@
+/* =====================================================
+   tokens.css - Design tokens Kebuli Ikhsan
+   Satu-satunya tempat nilai warna, font, spasi, dan animasi.
+   File CSS lain HANYA memakai var(--nama), tidak menulis nilai langsung.
+   ===================================================== */
+
+:root {
+  /* ---------- Warna merek ---------- */
+  --color-cokelat-900: #1f110a;   /* latar paling gelap */
+  --color-cokelat-800: #2b1810;   /* latar utama gelap */
+  --color-cokelat-700: #3d241a;   /* kartu di atas latar gelap */
+  --color-cokelat-600: #5a3a2b;
+
+  --color-emas-500: #c9a24b;      /* emas rempah (aksen utama) */
+  --color-emas-400: #dcb967;
+  --color-emas-600: #a9842f;
+
+  --color-krem-50:  #fbf5e8;
+  --color-krem-100: #f6ebd3;      /* krem nasi (latar terang) */
+  --color-krem-200: #eadcba;
+
+  --color-bata-500: #a8472f;      /* merah bata (tombol aksi) */
+  --color-bata-400: #bf5a40;
+  --color-bata-600: #8b3a25;
+
+  /* ---------- Warna status ---------- */
+  --color-sukses: #5f8a4a;        /* toko buka, pesanan diterima */
+  --color-bahaya: #b3372b;        /* toko tutup, pesanan ditolak */
+  --color-peringatan: #d9a13b;    /* menunggu */
+
+  /* ---------- Warna semantik (dipakai komponen) ---------- */
+  --bg-page:        var(--color-krem-100);
+  --bg-page-dark:   var(--color-cokelat-800);
+  --bg-card:        var(--color-krem-50);
+  --bg-card-dark:   var(--color-cokelat-700);
+  --text-primary:   var(--color-cokelat-800);
+  --text-muted:     var(--color-cokelat-600);
+  --text-on-dark:   var(--color-krem-100);
+  --text-accent:    var(--color-emas-500);
+  --action-bg:      var(--color-bata-500);
+  --action-bg-hover:var(--color-bata-400);
+  --action-bg-press:var(--color-bata-600);
+  --action-text:    var(--color-krem-50);
+  --border-soft:    rgba(43, 24, 16, 0.12);
+  --border-gold:    rgba(201, 162, 75, 0.45);
+  --overlay:        rgba(31, 17, 10, 0.6);
+
+  /* ---------- Tipografi ---------- */
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-body: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --fs-xs:   0.75rem;
+  --fs-sm:   0.875rem;
+  --fs-base: 1rem;
+  --fs-md:   1.125rem;
+  --fs-lg:   1.375rem;
+  --fs-xl:   1.75rem;
+  --fs-2xl:  clamp(2rem, 1.4rem + 3vw, 3rem);
+  --fs-hero: clamp(2.5rem, 1.5rem + 5vw, 4.5rem);
+
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-semibold:600;
+  --fw-bold:    700;
+
+  --lh-tight: 1.15;
+  --lh-normal: 1.5;
+  --lh-loose: 1.7;
+
+  /* ---------- Spasi (skala 4px) ---------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* ---------- Bentuk ---------- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* ---------- Bayangan (hangat, bukan abu-abu) ---------- */
+  --shadow-sm: 0 1px 3px rgba(43, 24, 16, 0.12);
+  --shadow-md: 0 6px 18px rgba(43, 24, 16, 0.16);
+  --shadow-lg: 0 16px 40px rgba(43, 24, 16, 0.24);
+  --shadow-gold: 0 0 0 2px var(--border-gold), 0 8px 24px rgba(201, 162, 75, 0.25);
+
+  /* ---------- Ukuran sentuh & tata letak ---------- */
+  --tap-min: 48px;                /* area sentuh minimum tombol */
+  --container-max: 1120px;
+  --container-pad: var(--space-4);
+  --header-h: 64px;
+  --bottom-bar-h: 72px;           /* bar keranjang di bawah layar (jangkauan ibu jari) */
+
+  /* ---------- Animasi ---------- */
+  --dur-instan: 80ms;
+  --dur-cepat:  160ms;            /* umpan balik tombol */
+  --dur-normal: 280ms;            /* kartu, modal */
+  --dur-lambat: 520ms;            /* animasi pembuka */
+
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-pegas:  cubic-bezier(0.34, 1.56, 0.64, 1);  /* efek memantul halus */
+
+  --press-scale: 0.96;            /* tombol mengecil saat disentuh */
+  --lift-y: -4px;                 /* kartu terangkat saat disentuh/hover */
+
+  /* ---------- Lapisan (z-index) ---------- */
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+  --z-splash: 1000;
+}
+
+/* Catatan breakpoint (CSS variable tidak bisa dipakai di @media),
+   gunakan nilai ini secara konsisten di responsive.css:
+     tablet  : min-width: 768px
+     desktop : min-width: 1100px                              */
+
+/* Hormati pengguna yang mematikan animasi di pengaturan HP */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-instan: 0ms;
+    --dur-cepat:  0ms;
+    --dur-normal: 0ms;
+    --dur-lambat: 0ms;
+    --press-scale: 1;
+    --lift-y: 0px;
+  }
+}

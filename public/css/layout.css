@@ -1,0 +1,220 @@
+/* =====================================================
+   layout.css - Kerangka tata letak halaman
+   Hanya mengatur POSISI dan SUSUNAN (container, grid, header, footer).
+   Tampilan komponen (tombol, kartu) ada di components.css.
+   Mobile-first: ini tampilan HP. Perubahan untuk tablet/desktop
+   ada di responsive.css.
+   Dimuat setelah base.css.
+   ===================================================== */
+
+/* ---------- Kerangka halaman ---------- */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+.page__main {
+  flex: 1 0 auto;
+}
+
+/* beri ruang agar konten tidak tertutup bar keranjang di bawah */
+.has-bottom-bar .page__main {
+  padding-bottom: calc(var(--bottom-bar-h) + var(--space-5) + env(safe-area-inset-bottom));
+}
+
+/* ---------- Kontainer ---------- */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+.container--narrow {
+  max-width: 720px;
+}
+
+/* ---------- Seksi ---------- */
+.section {
+  padding-block: var(--space-7);
+}
+
+.section--dark {
+  background-color: var(--bg-page-dark);
+  color: var(--text-on-dark);
+}
+
+.section--cream-deep {
+  background-color: var(--color-krem-200);
+}
+
+.section__head {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  text-align: center;
+}
+
+.section__eyebrow {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+/* ---------- Header ---------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  height: var(--header-h);
+  padding-top: env(safe-area-inset-top);
+  background-color: rgba(43, 24, 16, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-gold);
+  color: var(--text-on-dark);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  height: 100%;
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--color-emas-500);
+}
+
+/* navigasi: di HP disembunyikan (diganti bar bawah), tampil di desktop */
+.site-nav {
+  display: none;
+}
+
+.site-nav__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+/* ---------- Susunan umum ---------- */
+
+/* tumpukan vertikal dengan jarak seragam */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.stack--sm { gap: var(--space-2); }
+.stack--lg { gap: var(--space-6); }
+
+/* baris mendatar yang boleh turun baris */
+.cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.cluster--between {
+  justify-content: space-between;
+}
+
+.cluster--center {
+  justify-content: center;
+}
+
+/* ---------- Grid menu ---------- */
+.grid-menu {
+  display: grid;
+  grid-template-columns: 1fr;       /* HP: 1 kolom */
+  gap: var(--space-5);
+}
+
+/* filter kategori (Semua / Ayam / Kambing): geser mendatar di HP */
+.filter-bar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  padding-bottom: var(--space-2);
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.filter-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-bar > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/* ---------- Bar keranjang bawah (jangkauan ibu jari) ---------- */
+.bottom-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sticky);
+  min-height: var(--bottom-bar-h);
+  padding: var(--space-3) var(--container-pad);
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+  background-color: var(--color-cokelat-800);
+  border-top: 1px solid var(--border-gold);
+  color: var(--text-on-dark);
+}
+
+.bottom-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+/* ---------- Dua kolom (checkout: form + ringkasan) ---------- */
+.split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  flex-shrink: 0;
+  padding-block: var(--space-7);
+  background-color: var(--color-cokelat-900);
+  color: var(--text-on-dark);
+}
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  text-align: center;
+}
+
+.site-footer__copy {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-gold);
+  font-size: var(--fs-sm);
+  text-align: center;
+  opacity: 0.7;
+}

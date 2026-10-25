@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kebuli Ikhsan | Nasi Kebuli Ayam & Kambing</title>
+  <meta name="description" content="Nasi kebuli khas Timur Tengah dengan daging ayam dan kambing. Pesan mudah lewat website, kirim langsung ke WhatsApp.">
+  <meta name="theme-color" content="#2b1810">
+
+  <!-- Wajib di <head>: tandai JS aktif + lewati splash bila sudah pernah tampil di sesi ini -->
+  <script>
+    (function (d) {
+      d.classList.add('js');
+      try {
+        if (sessionStorage.getItem('splashSeen')) d.classList.add('splash-skipped');
+        else sessionStorage.setItem('splashSeen', '1');
+      } catch (e) {}
+    })(document.documentElement);
+  </script>
+
+  <!-- Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- CSS: urutan ini tidak boleh diubah -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/pages/home.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+
+<body class="has-bottom-bar">
+
+  <!-- Ikon (dipakai ulang dengan <use href="#i-nama">) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 34h48c0 12-10 22-24 22S8 46 8 34z"/>
+      <path d="M16 34c0-9 7-17 16-17s16 8 16 17"/>
+      <path d="M32 9v4M24 12l1.5 3M40 12l-1.5 3"/>
+    </symbol>
+    <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/>
+      <circle cx="10" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/>
+    </symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.2A8.5 8.5 0 1 1 20 11.5z"/>
+      <path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1.2-1.4-2-1-.9.8c-1-.4-2-1.4-2.4-2.4l.8-.9-1-2z"/>
+    </symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+    </symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>
+    </symbol>
+    <symbol id="i-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M21 16l-5-5-8 8"/>
+    </symbol>
+  </svg>
+
+  <!-- ANIMASI PEMBUKA -->
+  <div class="splash" aria-hidden="true">
+    <div class="splash__inner">
+      <svg class="splash__mark"><use href="#i-mark"/></svg>
+      <p class="splash__title" data-store-name>Kebuli Ikhsan</p>
+      <div class="splash__line"></div>
+      <p class="splash__sub">Cita rasa Timur Tengah</p>
+    </div>
+  </div>
+
+  <div class="page">
+
+    <!-- HEADER -->
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="site-header__brand" href="index.html" aria-label="Kebuli Ikhsan, beranda">
+          <svg class="btn__icon" style="width:1.8rem;height:1.8rem" aria-hidden="true"><use href="#i-mark"/></svg>
+          <span data-store-name>Kebuli Ikhsan</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Navigasi utama">
+          <ul class="site-nav__list">
+            <li><a href="index.html" aria-current="page">Beranda</a></li>
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="#cara-pesan">Cara Pesan</a></li>
+            <li><a href="#kontak">Kontak</a></li>
+          </ul>
+        </nav>
+
+        <a class="btn btn--ghost btn--sm" href="checkout.html" aria-label="Keranjang">
+          <svg class="btn__icon" aria-hidden="true"><use href="#i-cart"/></svg>
+          <span class="cart-count" data-count="0">0</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="page__main">
+
+      <!-- HERO -->
+      <section class="hero section--dark">
+        <div class="container hero__grid">
+
+          <div class="hero__content stack">
+            <span class="section__eyebrow hero-anim" style="--i:0">Nasi Kebuli Khas Timur Tengah</span>
+
+            <h1 class="hero__title hero-anim" style="--i:1">
+              Harum rempah,<br><em>empuk</em> di setiap suapan
+            </h1>
+
+            <p class="hero__lead hero-anim" style="--i:2">
+              Nasi kebuli berempah dengan pilihan daging ayam atau kambing.
+              Pesan lewat website, pesanan langsung tersusun rapi di WhatsApp.
+            </p>
+
+            <div class="hero__status hero-anim" style="--i:3">
+              <span class="badge badge--open" data-store-status>
+                <span class="badge__dot"></span>
+                <span data-store-status-text>Buka</span>
+              </span>
+              <span class="hero__hours">
+                <svg class="btn__icon" aria-hidden="true"><use href="#i-clock"/></svg>
+                <span data-store-hours>Jam buka diisi dari Google Sheets</span>
+              </span>
+            </div>
+
+            <div class="hero__actions hero-anim" style="--i:4">
+              <a class="btn btn--lg" href="menu.html">Pesan Sekarang</a>
+              <a class="btn btn--lg btn--ghost" href="#" data-wa-link>
+                <svg class="btn__icon" aria-hidden="true"><use href="#i-wa"/></svg>
+                Chat WhatsApp
+              </a>
+            </div>
+          </div>
+
+          <div class="hero__visual hero-anim" style="--i:3">
+            <div class="steam-row" aria-hidden="true">
+              <span class="steam" style="--i:0"></span>
+              <span class="steam" style="--i:1"></span>
+              <span class="steam" style="--i:2"></span>
+            </div>
+            <!-- GANTI dengan foto asli: <img src="assets/images/hero/hero.jpg" alt="Nasi kebuli kambing" ...> -->
+            <div class="photo-ph hero__photo" role="img" aria-label="Foto nasi kebuli (belum diisi)">
+              <svg aria-hidden="true"><use href="#i-photo"/></svg>
+              <span>Foto hero nasi kebuli</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- MENU ANDALAN -->
+      <section class="section" id="menu-andalan">
+        <div class="container">
+          <header class="section__head reveal">
+            <span class="section__eyebrow">Menu Andalan</span>
+            <h2>Pilih favoritmu</h2>
+          </header>
+
+          <!-- Data CONTOH. Tahap berikutnya diganti otomatis dari Google Sheets -->
+          <div class="grid-menu">
+
+            <article class="menu-card reveal" style="--i:0">
+              <div class="menu-card__media">
+                <div class="photo-ph" role="img" aria-label="Foto kebuli ayam (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <span class="menu-card__tag">Ayam</span>
+              </div>
+              <div class="menu-card__body">
+                <h3 class="menu-card__title">Nasi Kebuli Ayam</h3>
+                <p class="menu-card__desc">Nasi berempah dengan potongan ayam empuk, disajikan dengan acar dan sambal.</p>
+              </div>
+              <div class="menu-card__foot">
+                <span class="menu-card__price">Rp 35.000</span>
+                <a class="btn btn--sm" href="menu.html">Pesan</a>
+              </div>
+            </article>
+
+            <article class="menu-card reveal" style="--i:1">
+              <div class="menu-card__media">
+                <div class="photo-ph" role="img" aria-label="Foto kebuli kambing (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <span class="menu-card__tag">Kambing</span>
+              </div>
+              <div class="menu-card__body">
+                <h3 class="menu-card__title">Nasi Kebuli Kambing</h3>
+                <p class="menu-card__desc">Daging kambing empuk di atas nasi kebuli harum rempah pilihan.</p>
+              </div>
+              <div class="menu-card__foot">
+                <span class="menu-card__price">Rp 55.000</span>
+                <a class="btn btn--sm" href="menu.html">Pesan</a>
+              </div>
+            </article>
+
+            <article class="menu-card reveal" style="--i:2">
+              <div class="menu-card__media">
+                <div class="photo-ph" role="img" aria-label="Foto paket keluarga (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <span class="menu-card__tag">Paket</span>
+              </div>
+              <div class="menu-card__body">
+                <h3 class="menu-card__title">Paket Keluarga</h3>
+                <p class="menu-card__desc">Porsi besar untuk berbagi bersama keluarga, bisa pilih ayam atau kambing.</p>
+              </div>
+              <div class="menu-card__foot">
+                <span class="menu-card__price">Rp 150.000</span>
+                <a class="btn btn--sm" href="menu.html">Pesan</a>
+              </div>
+            </article>
+
+          </div>
+
+          <p class="cluster cluster--center reveal" style="margin-top: var(--space-6)">
+            <a class="btn btn--ghost" href="menu.html">Lihat semua menu</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- CARA PESAN -->
+      <section class="section section--dark" id="cara-pesan">
+        <div class="container">
+          <header class="section__head reveal">
+            <span class="section__eyebrow">Cara Pesan</span>
+            <h2>Mudah, tiga langkah</h2>
+          </header>
+
+          <ol class="steps">
+            <li class="step reveal" style="--i:0">
+              <span class="step__num">1</span>
+              <h3>Pilih menu</h3>
+              <p>Lihat menu, pilih ayam atau kambing, lalu tekan tombol tambah.</p>
+            </li>
+            <li class="step reveal" style="--i:1">
+              <span class="step__num">2</span>
+              <h3>Cek pesanan</h3>
+              <p>Ringkasan dan total harga diperbarui langsung saat kamu menambah atau mengurangi.</p>
+            </li>
+            <li class="step reveal" style="--i:2">
+              <span class="step__num">3</span>
+              <h3>Kirim ke WhatsApp</h3>
+              <p>Pesanan tersusun otomatis, tinggal kirim ke penjual. Selesai.</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- KONTAK -->
+      <section class="section" id="kontak">
+        <div class="container container--narrow">
+          <div class="contact-card reveal">
+            <h2>Punya pertanyaan?</h2>
+            <p>Hubungi kami langsung lewat WhatsApp. Kami senang membantu.</p>
+            <p class="contact-card__address">
+              <svg class="btn__icon" aria-hidden="true"><use href="#i-pin"/></svg>
+              <span data-store-address>Alamat toko diisi dari Google Sheets</span>
+            </p>
+            <a class="btn btn--wa btn--lg" href="#" data-wa-link>
+              <svg class="btn__icon" aria-hidden="true"><use href="#i-wa"/></svg>
+              Chat WhatsApp
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+      <div class="container">
+        <div class="site-footer__grid">
+          <div class="stack stack--sm">
+            <strong class="footer-brand" data-store-name>Kebuli Ikhsan</strong>
+            <p>Nasi kebuli ayam dan kambing khas Timur Tengah.</p>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Menu</strong>
+            <a href="menu.html">Daftar menu</a>
+            <a href="checkout.html">Keranjang</a>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Bantuan</strong>
+            <a href="#cara-pesan">Cara pesan</a>
+            <a href="#" data-wa-link>WhatsApp</a>
+          </div>
+        </div>
+        <p class="site-footer__copy">&copy; <span id="year">2026</span> <span data-store-name>Kebuli Ikhsan</span>. Semua hak dilindungi.</p>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- BAR BAWAH (jangkauan ibu jari) -->
+  <div class="bottom-bar">
+    <div class="bottom-bar__inner">
+      <span>Lapar? Yuk pilih menu.</span>
+      <a class="btn btn--gold" href="menu.html">Lihat Menu</a>
+    </div>
+  </div>
+
+  <div class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ES module: perlu dibuka lewat server lokal, bukan klik file langsung -->
+  <script type="module" src="js/pages/home.js"></script>
+</body>
+</html>
