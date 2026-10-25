@@ -35,36 +35,10 @@
 
 <body class="has-bottom-bar">
 
-  <!-- Ikon (dipakai ulang dengan <use href="#i-nama">) -->
-  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-    <symbol id="i-mark" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M8 34h48c0 12-10 22-24 22S8 46 8 34z"/>
-      <path d="M16 34c0-9 7-17 16-17s16 8 16 17"/>
-      <path d="M32 9v4M24 12l1.5 3M40 12l-1.5 3"/>
-    </symbol>
-    <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/>
-      <circle cx="10" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/>
-    </symbol>
-    <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M20 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.2A8.5 8.5 0 1 1 20 11.5z"/>
-      <path d="M9 8.5c0 3.5 3 6.5 6.5 6.5l1.2-1.4-2-1-.9.8c-1-.4-2-1.4-2.4-2.4l.8-.9-1-2z"/>
-    </symbol>
-    <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
-    </symbol>
-    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 21s7-6.2 7-11a7 7 0 1 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>
-    </symbol>
-    <symbol id="i-photo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-      <rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="1.6"/><path d="M21 16l-5-5-8 8"/>
-    </symbol>
-  </svg>
-
   <!-- ANIMASI PEMBUKA -->
   <div class="splash" aria-hidden="true">
     <div class="splash__inner">
-      <svg class="splash__mark"><use href="#i-mark"/></svg>
+      <svg class="splash__mark"><use href="assets/icons/sprite.svg#i-mark"/></svg>
       <p class="splash__title" data-store-name>Kebuli Ikhsan</p>
       <div class="splash__line"></div>
       <p class="splash__sub">Cita rasa Timur Tengah</p>
@@ -77,7 +51,7 @@
     <header class="site-header">
       <div class="container site-header__inner">
         <a class="site-header__brand" href="index.html" aria-label="Kebuli Ikhsan, beranda">
-          <svg class="btn__icon" style="width:1.8rem;height:1.8rem" aria-hidden="true"><use href="#i-mark"/></svg>
+          <svg class="btn__icon" style="width:1.8rem;height:1.8rem" aria-hidden="true"><use href="assets/icons/sprite.svg#i-mark"/></svg>
           <span data-store-name>Kebuli Ikhsan</span>
         </a>
 
@@ -91,7 +65,7 @@
         </nav>
 
         <a class="btn btn--ghost btn--sm" href="checkout.html" aria-label="Keranjang">
-          <svg class="btn__icon" aria-hidden="true"><use href="#i-cart"/></svg>
+          <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-cart"/></svg>
           <span class="cart-count" data-count="0">0</span>
         </a>
       </div>
@@ -116,12 +90,12 @@
             </p>
 
             <div class="hero__status hero-anim" style="--i:3">
-              <span class="badge badge--open" data-store-status>
+              <span class="badge badge--pending" data-store-status>
                 <span class="badge__dot"></span>
-                <span data-store-status-text>Buka</span>
+                <span data-store-status-text>Memeriksa status</span>
               </span>
               <span class="hero__hours">
-                <svg class="btn__icon" aria-hidden="true"><use href="#i-clock"/></svg>
+                <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-clock"/></svg>
                 <span data-store-hours>Jam buka diisi dari Google Sheets</span>
               </span>
             </div>
@@ -129,7 +103,7 @@
             <div class="hero__actions hero-anim" style="--i:4">
               <a class="btn btn--lg" href="menu.html">Pesan Sekarang</a>
               <a class="btn btn--lg btn--ghost" href="#" data-wa-link>
-                <svg class="btn__icon" aria-hidden="true"><use href="#i-wa"/></svg>
+                <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-wa"/></svg>
                 Chat WhatsApp
               </a>
             </div>
@@ -143,7 +117,7 @@
             </div>
             <!-- GANTI dengan foto asli: <img src="assets/images/hero/hero.jpg" alt="Nasi kebuli kambing" ...> -->
             <div class="photo-ph hero__photo" role="img" aria-label="Foto nasi kebuli (belum diisi)">
-              <svg aria-hidden="true"><use href="#i-photo"/></svg>
+              <svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg>
               <span>Foto hero nasi kebuli</span>
             </div>
           </div>
@@ -164,7 +138,7 @@
 
             <article class="menu-card reveal" style="--i:0">
               <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto kebuli ayam (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <div class="photo-ph" role="img" aria-label="Foto kebuli ayam (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
                 <span class="menu-card__tag">Ayam</span>
               </div>
               <div class="menu-card__body">
@@ -179,7 +153,7 @@
 
             <article class="menu-card reveal" style="--i:1">
               <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto kebuli kambing (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <div class="photo-ph" role="img" aria-label="Foto kebuli kambing (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
                 <span class="menu-card__tag">Kambing</span>
               </div>
               <div class="menu-card__body">
@@ -194,7 +168,7 @@
 
             <article class="menu-card reveal" style="--i:2">
               <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto paket keluarga (belum diisi)"><svg aria-hidden="true"><use href="#i-photo"/></svg></div>
+                <div class="photo-ph" role="img" aria-label="Foto paket keluarga (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
                 <span class="menu-card__tag">Paket</span>
               </div>
               <div class="menu-card__body">
@@ -250,11 +224,11 @@
             <h2>Punya pertanyaan?</h2>
             <p>Hubungi kami langsung lewat WhatsApp. Kami senang membantu.</p>
             <p class="contact-card__address">
-              <svg class="btn__icon" aria-hidden="true"><use href="#i-pin"/></svg>
+              <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-pin"/></svg>
               <span data-store-address>Alamat toko diisi dari Google Sheets</span>
             </p>
             <a class="btn btn--wa btn--lg" href="#" data-wa-link>
-              <svg class="btn__icon" aria-hidden="true"><use href="#i-wa"/></svg>
+              <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-wa"/></svg>
               Chat WhatsApp
             </a>
           </div>

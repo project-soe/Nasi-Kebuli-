@@ -1,16 +1,19 @@
 # Kebuli Ikhsan
 
 Website pemesanan nasi kebuli (ayam & kambing) khas Timur Tengah.
-
-## Alur
-Website pelanggan -> Backend (validasi) -> Google Apps Script -> Google Sheets
+Database: Firebase Firestore. Pesanan dikirim ke WhatsApp penjual.
 
 ## Struktur
-- `public/`            : halaman website (HTML, CSS, JS)
-- `backend/`           : server Node.js (validasi harga, auth admin, status pesanan)
-- `google-apps-script/`: jembatan ke Google Sheets
-- `docs/`              : dokumentasi
-- `tests/`             : checklist tes manual
+- `public/`   halaman website (HTML, CSS, JS)
+- `firebase/` aturan keamanan Firestore
+- `docs/`     dokumentasi
+- `tests/`    checklist tes manual
 
-## Menjalankan (lokal)
+## Menjalankan di lokal
+```
+python3 -m http.server 8080 -d public
+```
+Lalu buka http://localhost:8080 (jangan buka file HTML langsung).
+
+## Pengaturan Firebase (sekali saja)
 Lihat `docs/05-deployment.md`.

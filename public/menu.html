@@ -2,10 +2,123 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Menu | Kebuli Ikhsan</title>
+  <meta name="description" content="Daftar menu nasi kebuli ayam dan kambing. Tambah ke pesanan, kirim langsung ke WhatsApp.">
+  <meta name="theme-color" content="#2b1810">
+
+  <script>document.documentElement.classList.add('js');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/pages/menu.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
-<body>
-  <!-- TODO: Menu -->
+
+<body class="has-bottom-bar">
+  <div class="page">
+
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="site-header__brand" href="index.html" aria-label="Kebuli Ikhsan, beranda">
+          <svg class="btn__icon" style="width:1.8rem;height:1.8rem" aria-hidden="true"><use href="assets/icons/sprite.svg#i-mark"/></svg>
+          <span data-store-name>Kebuli Ikhsan</span>
+        </a>
+
+        <nav class="site-nav" aria-label="Navigasi utama">
+          <ul class="site-nav__list">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="menu.html" aria-current="page">Menu</a></li>
+            <li><a href="index.html#cara-pesan">Cara Pesan</a></li>
+            <li><a href="index.html#kontak">Kontak</a></li>
+          </ul>
+        </nav>
+
+        <button class="btn btn--ghost btn--sm" type="button" data-open-cart aria-label="Buka pesanan">
+          <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-cart"/></svg>
+          <span class="cart-count" data-count="0">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="page__main">
+
+      <section class="page-hero section--dark">
+        <div class="container page-hero__inner">
+          <span class="section__eyebrow">Menu</span>
+          <h1 class="page-hero__title">Pilih nasi kebuli favoritmu</h1>
+          <div class="page-hero__status">
+            <span class="badge badge--pending" data-store-status>
+              <span class="badge__dot"></span>
+              <span data-store-status-text>Memeriksa status</span>
+            </span>
+            <span class="page-hero__hours">
+              <svg class="btn__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-clock"/></svg>
+              <span data-store-hours>Jam buka</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <div class="store-banner" id="store-banner" role="status" hidden>
+        <div class="container"><p id="store-banner-text"></p></div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+          <div class="filter-bar" id="filter-bar" role="group" aria-label="Filter kategori menu"></div>
+          <div class="grid-menu" id="menu-grid" aria-live="polite" aria-busy="true"></div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="site-footer__grid">
+          <div class="stack stack--sm">
+            <strong class="footer-brand" data-store-name>Kebuli Ikhsan</strong>
+            <p>Nasi kebuli ayam dan kambing khas Timur Tengah.</p>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Menu</strong>
+            <a href="menu.html">Daftar menu</a>
+            <a href="index.html#cara-pesan">Cara pesan</a>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Bantuan</strong>
+            <a href="#" data-wa-link>Chat WhatsApp</a>
+            <span data-store-address></span>
+          </div>
+        </div>
+        <p class="site-footer__copy">&copy; <span id="year">2026</span> <span data-store-name>Kebuli Ikhsan</span>. Semua hak dilindungi.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- BAR KERANJANG (muncul setelah ada pesanan) -->
+  <div class="bottom-bar is-entering" id="cart-bar" hidden>
+    <div class="bottom-bar__inner">
+      <div class="cart-bar__info">
+        <svg class="cart-bar__icon" data-cart-target aria-hidden="true"><use href="assets/icons/sprite.svg#i-cart"/></svg>
+        <div>
+          <span class="cart-bar__label" id="cart-bar-count">0 item</span>
+          <strong class="cart-bar__total" id="cart-bar-total">Rp 0</strong>
+        </div>
+      </div>
+      <button class="btn btn--gold" type="button" data-open-cart>Lihat Pesanan</button>
+    </div>
+  </div>
+
+  <div class="toast-region" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="js/pages/menu.js"></script>
 </body>
 </html>

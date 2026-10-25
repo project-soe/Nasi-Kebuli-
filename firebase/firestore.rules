@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// Tempel isi file ini di: Firebase Console > Firestore Database > Rules > Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------- fungsi bantu ----------
+
+    // Admin = akun yang punya dokumen di koleksi "admins" dengan ID = UID akun itu.
+    // Dokumen admins hanya bisa dibuat manual lewat Firebase Console.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Pesanan hanya diterima saat toko buka (bila pengaturan toko belum dibuat, dianggap buka)
+    function storeIsOpen() {
+      return !exists(/databases/$(database)/documents/settings/store)
+        || get(/databases/$(database)/documents/settings/store).data.isOpen != false;
+    }
+
+    function validOrder(d) {
+      return d.keys().hasOnly(['customerName', 'phone', 'note', 'items', 'total', 'status', 'createdAt'])
+        && d.keys().hasAll(['customerName', 'phone', 'items', 'total', 'status', 'createdAt'])
+        && d.customerName is string && d.customerName.size() >= 2 && d.customerName.size() <= 60
+        && d.phone is string && d.phone.size() >= 8 && d.phone.size() <= 20
+        && (!('note' in d) || (d.note is string && d.note.size() <= 300))
+        && d.items is list && d.items.size() >= 1 && d.items.size() <= 30
+        && d.total is number && d.total > 0 && d.total <= 10000000
+        && d.status == 'menunggu'
+        && d.createdAt == request.time;
+    }
+
+    // ---------- koleksi ----------
+
+    // Menu dan pengaturan toko: semua orang boleh membaca, hanya admin yang mengubah
+    match /menu/{menuId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Pesanan:
+    // - pelanggan boleh MEMBUAT pesanan (tervalidasi) dan MEMBACA satu pesanan
+    //   bila tahu ID-nya (ID acak 20 karakter, dipakai di halaman status pesanan)
+    // - hanya admin yang boleh melihat daftar, mengubah status, atau menghapus
+    match /orders/{orderId} {
+      allow create: if validOrder(request.resource.data) && storeIsOpen();
+      allow get: if true;
+      allow list, update, delete: if isAdmin();
+
+      match /history/{historyId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
+    // Selain itu: tertutup
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
