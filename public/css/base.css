@@ -151,6 +151,16 @@ textarea {
               box-shadow var(--dur-cepat) var(--ease-out);
 }
 
+/* lebar kolom isian mengikuti wadah (tanpa ini, lebar bawaan browser bisa
+   mendorong tata letak melewati tepi kanan layar HP) */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
 /* ukuran 16px mencegah iOS memperbesar layar otomatis saat mengetik */
 input,
 select,

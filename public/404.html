@@ -3,9 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Halaman Tidak Ditemukan | Kebuli Ikhsan</title>
+  <title>Halaman tidak ditemukan | Kebuli Ikhsan</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#2b1810">
+  <!-- Mandiri (tanpa file CSS/JS luar): halaman 404 bisa tampil dari alamat sedalam apa pun -->
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; margin: 0; }
+    body {
+      min-height: 100dvh; display: grid; place-items: center; padding: 24px;
+      font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #f6ebd3; text-align: center;
+      background: radial-gradient(circle at 50% 30%, #3d241a 0%, #1f110a 70%);
+    }
+    main { display: grid; gap: 16px; justify-items: center; max-width: 420px; }
+    svg { width: 72px; height: 72px; color: #c9a24b; }
+    .code { font-family: Georgia, "Times New Roman", serif; font-size: 4.5rem; line-height: 1; color: #c9a24b; }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-size: 1.6rem; }
+    p { line-height: 1.6; color: rgba(246, 235, 211, 0.8); }
+    .actions { display: grid; gap: 12px; width: 100%; margin-top: 8px; }
+    a {
+      display: flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 24px;
+      font-weight: 600; text-decoration: none; border-radius: 999px;
+      color: #fbf5e8; background: #a8472f; transition: transform .16s ease;
+    }
+    a:active { transform: scale(.96); }
+    a.ghost { background: transparent; color: #f6ebd3; border: 1px solid rgba(201, 162, 75, .55); }
+  </style>
 </head>
 <body>
-  <!-- TODO: Halaman Tidak Ditemukan -->
+  <main>
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M8 34h48c0 12-10 22-24 22S8 46 8 34z"/><path d="M16 34c0-9 7-17 16-17s16 8 16 17"/><path d="M32 9v4M24 12l1.5 3M40 12l-1.5 3"/>
+    </svg>
+    <span class="code">404</span>
+    <h1>Halaman tidak ditemukan</h1>
+    <p>Alamat yang kamu buka tidak ada atau sudah dipindah. Yuk, kembali dan pilih nasi kebuli favoritmu.</p>
+    <div class="actions">
+      <a id="go-home" href="/">Kembali ke beranda</a>
+      <a id="go-menu" class="ghost" href="/menu.html">Lihat menu</a>
+    </div>
+  </main>
+  <script>
+    // GitHub Pages memakai sub-folder (/nama-repo/); domain sendiri memakai akar (/)
+    (function () {
+      var base = '/';
+      if (/\.github\.io$/.test(location.hostname)) {
+        var first = location.pathname.split('/')[1];
+        if (first) base = '/' + first + '/';
+      }
+      document.getElementById('go-home').href = base;
+      document.getElementById('go-menu').href = base + 'menu.html';
+    })();
+  </script>
 </body>
 </html>

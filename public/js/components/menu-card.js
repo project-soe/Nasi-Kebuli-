@@ -23,9 +23,10 @@ export function flashAdded(button) {
 
 /**
  * @param {object} item  data menu
- * @param {{ closed?: boolean, onAdd?: (item: object, button: HTMLElement) => void }} options
+ * @param {{ closed?: boolean, onAdd?: (item: object, button: HTMLElement) => void, linkTo?: string }} options
+ * linkTo: bila diisi, tombol menjadi tautan "Pesan" ke alamat itu (dipakai di beranda).
  */
-export function createMenuCard(item, { closed = false, onAdd } = {}) {
+export function createMenuCard(item, { closed = false, onAdd, linkTo } = {}) {
   const soldOut = !item.available;
   const imageUrl = safeImageUrl(item.imageUrl);
 
@@ -38,18 +39,18 @@ export function createMenuCard(item, { closed = false, onAdd } = {}) {
     picture.addEventListener('error', () => picture.replaceWith(placeholder(item.name)), { once: true });
   }
 
-  const button = h('button', {
-    class: 'btn btn--sm', type: 'button',
-    'aria-label': `Tambah ${item.name} ke pesanan`,
-  });
-
+  let button;
   if (soldOut) {
-    button.disabled = true;
-    button.replaceChildren('Habis');
+    button = h('button', { class: 'btn btn--sm', type: 'button', disabled: true, text: 'Habis' });
+  } else if (linkTo) {
+    button = h('a', { class: 'btn btn--sm', href: linkTo, 'aria-label': `Pesan ${item.name}`, text: 'Pesan' });
   } else if (closed) {
-    button.disabled = true;
-    button.replaceChildren('Toko tutup');
+    button = h('button', { class: 'btn btn--sm', type: 'button', disabled: true, text: 'Toko tutup' });
   } else {
+    button = h('button', {
+      class: 'btn btn--sm', type: 'button',
+      'aria-label': `Tambah ${item.name} ke pesanan`,
+    });
     setButton(button, 'i-plus', 'Tambah');
     button.addEventListener('click', () => onAdd && onAdd(item, button));
   }

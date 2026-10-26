@@ -1,1 +1,84 @@
-/* pages/checkout.css */
+/* =====================================================
+   pages/checkout.css - Khusus halaman checkout
+   ===================================================== */
+
+.form-card {
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-card__title {
+  font-size: var(--fs-lg);
+}
+
+.form-card__hint {
+  text-align: center;
+}
+
+/* di HP: ringkasan tampil di atas form (lihat dulu pesananmu) */
+.split > .order-summary {
+  order: -1;
+}
+
+/* ---------- Halaman sukses ---------- */
+.success {
+  display: grid;
+  gap: var(--space-4);
+  justify-items: center;
+  max-width: 480px;
+  margin-inline: auto;
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  animation: rise-in var(--dur-lambat) var(--ease-out) both;
+}
+
+.success > .btn {
+  width: 100%;
+}
+
+.success__icon {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  color: var(--color-krem-50);
+  background-color: var(--color-sukses);
+  border-radius: 50%;
+  animation: check-pop 520ms var(--ease-pegas) 150ms both;
+}
+
+.success__icon svg {
+  width: 38px;
+  height: 38px;
+}
+
+.success__code {
+  padding: var(--space-2) var(--space-4);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.08em;
+  color: var(--color-cokelat-800);
+  background-color: var(--color-krem-200);
+  border-radius: var(--radius-pill);
+}
+
+.success__back {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success,
+  .success__icon {
+    animation: none;
+  }
+}

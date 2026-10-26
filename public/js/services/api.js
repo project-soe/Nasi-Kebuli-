@@ -9,8 +9,9 @@ const SDK_VERSION = '10.14.1';
 const BASE = `https://www.gstatic.com/firebasejs/${SDK_VERSION}`;
 
 let ready;
+let authReady;
 
-/** @returns {Promise<{ db: object, fs: object }>} */
+/** Firestore. @returns {Promise<{ app: object, db: object, fs: object }>} */
 export function getFirebase() {
   ready ??= (async () => {
     const [{ initializeApp }, fs] = await Promise.all([
@@ -18,9 +19,22 @@ export function getFirebase() {
       import(`${BASE}/firebase-firestore.js`),
     ]);
     const app = initializeApp(firebaseConfig);
-    return { db: fs.getFirestore(app), fs };
+    return { app, db: fs.getFirestore(app), fs };
   })();
   // jika gagal, izinkan percobaan ulang pada pemanggilan berikutnya
   ready.catch(() => { ready = undefined; });
   return ready;
+}
+
+/** Authentication (hanya dimuat di halaman admin). */
+export function getAuthSdk() {
+  authReady ??= (async () => {
+    const [{ app }, sdk] = await Promise.all([
+      getFirebase(),
+      import(`${BASE}/firebase-auth.js`),
+    ]);
+    return { auth: sdk.getAuth(app), sdk };
+  })();
+  authReady.catch(() => { authReady = undefined; });
+  return authReady;
 }

@@ -4,6 +4,9 @@
 
 const SPRITE = new URL('../../assets/icons/sprite.svg', import.meta.url).href;
 const SVG_NS = 'http://www.w3.org/2000/svg';
+// akar situs (folder public/), agar jalur relatif seperti assets/images/menu/ayam.jpg
+// terbaca benar dari halaman mana pun (termasuk /admin/)
+const SITE_ROOT = new URL('../../', import.meta.url).href;
 
 /** h('div', { class: 'x', text: 'halo', onClick: fn }, anak1, anak2) */
 export function h(tag, props = {}, ...children) {
@@ -35,11 +38,11 @@ export function icon(id, className = 'btn__icon') {
   return svg;
 }
 
-/** Hanya izinkan alamat gambar http(s); selain itu dianggap tidak ada */
+/** Izinkan alamat gambar http(s) atau jalur relatif situs; selain itu dianggap tidak ada */
 export function safeImageUrl(value) {
   if (!value || typeof value !== 'string') return '';
   try {
-    const url = new URL(value, document.baseURI);
+    const url = new URL(value.trim(), SITE_ROOT);
     return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
   } catch {
     return '';

@@ -9,6 +9,7 @@ import { cart, MAX_QTY } from '../components/cart.js';
 import { createMenuCard, createSkeletonCard, flashAdded } from '../components/menu-card.js';
 import { openModal } from '../components/modal.js';
 import { showToast } from '../components/toast.js';
+import { orderLine, summaryRows, restoreFocus } from '../components/order-summary.js';
 
 const state = {
   menu: [],
@@ -154,34 +155,6 @@ function openCart() {
   renderCartModal();
 }
 
-function orderLine(item) {
-  const key = (action) => `${item.id}:${action}`;
-  return h('li', { class: 'order-line' },
-    h('div', {},
-      h('div', { class: 'order-line__name', text: item.name }),
-      h('div', { class: 'order-line__meta', text: `${formatRupiah(item.price)} \u00d7 ${item.qty}` })),
-    h('div', { class: 'order-line__price', text: formatRupiah(item.price * item.qty) }),
-    h('div', { class: 'order-line__qty' },
-      h('div', { class: 'qty' },
-        h('button', {
-          class: 'qty__btn', type: 'button', dataset: { key: key('dec') },
-          'aria-label': `Kurangi ${item.name}`, text: '\u2212',
-          onClick: () => cart.setQty(item.id, item.qty - 1),
-        }),
-        h('span', { class: 'qty__value', 'aria-live': 'polite', text: String(item.qty) }),
-        h('button', {
-          class: 'qty__btn', type: 'button', dataset: { key: key('inc') },
-          'aria-label': `Tambah ${item.name}`, text: '+',
-          disabled: item.qty >= MAX_QTY,
-          onClick: () => cart.setQty(item.id, item.qty + 1),
-        })),
-      h('button', {
-        class: 'order-line__remove', type: 'button', dataset: { key: key('del') },
-        'aria-label': `Hapus ${item.name}`,
-        onClick: () => cart.remove(item.id),
-      }, icon('i-trash', ''))));
-}
-
 function renderCartModal() {
   if (!cartModal) return;
   const { items, count, total } = cart.getState();
@@ -195,12 +168,7 @@ function renderCartModal() {
 
   cartModal.body.replaceChildren(
     h('ul', { class: 'order-summary__list' }, items.map(orderLine)),
-    h('div', { class: 'order-summary__row' },
-      h('span', { text: 'Jumlah porsi' }),
-      h('span', { text: String(count) })),
-    h('div', { class: 'order-summary__row order-summary__row--total' },
-      h('span', { text: 'Total' }),
-      h('span', { class: 'order-summary__amount', text: formatRupiah(total) }))
+    ...summaryRows({ count, total })
   );
 
   const checkout = isClosed()
@@ -222,10 +190,7 @@ function renderCartModal() {
 
   cartModal.footer.replaceChildren(checkout, clear);
 
-  if (focusKey) {
-    const again = [...cartModal.body.querySelectorAll('[data-key]')].find((n) => n.dataset.key === focusKey);
-    if (again && !again.disabled) again.focus();
-  }
+  restoreFocus(cartModal.body, focusKey);
 }
 
 /* ---------------------------------------------------------

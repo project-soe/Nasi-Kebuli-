@@ -1,0 +1,179 @@
+/* =====================================================
+   pages/order-status.css - Halaman status pesanan pelanggan
+   ===================================================== */
+
+.status-card {
+  display: grid;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-gold);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  animation: rise-in var(--dur-lambat) var(--ease-out) both;
+}
+
+.status-card + .status-card {
+  margin-top: var(--space-5);
+}
+
+.status-card__head {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+  text-align: center;
+}
+
+.status-card__code {
+  padding: var(--space-1) var(--space-4);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.1em;
+  background-color: var(--color-krem-200);
+  border-radius: var(--radius-pill);
+}
+
+.status-card__message {
+  max-width: 38ch;
+  color: var(--text-muted);
+}
+
+.status-card__time {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+/* ---------- Garis langkah ---------- */
+.track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.track__step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.track__dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  color: transparent;
+  background-color: var(--color-krem-200);
+  border: 2px solid var(--border-soft);
+  border-radius: 50%;
+  transition:
+    background-color var(--dur-lambat) var(--ease-out),
+    border-color var(--dur-lambat) var(--ease-out);
+}
+
+.track__dot svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* garis penghubung ke langkah sebelumnya */
+.track__step:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  right: 50%;
+  width: 100%;
+  height: 4px;
+  background-color: var(--color-krem-200);
+  transform-origin: left center;
+}
+
+.track__step.is-done:not(:first-child)::before,
+.track__step.is-current:not(:first-child)::before {
+  background-color: var(--color-emas-500);
+  animation: fill-x var(--dur-lambat) var(--ease-out) both;
+}
+
+.track__step.is-done .track__dot {
+  color: var(--color-cokelat-900);
+  background-color: var(--color-emas-500);
+  border-color: var(--color-emas-600);
+}
+
+.track__step.is-current {
+  color: var(--text-primary);
+  font-weight: var(--fw-semibold);
+}
+
+.track__step.is-current .track__dot {
+  background-color: var(--color-bata-500);
+  border-color: var(--color-bata-600);
+  box-shadow: 0 0 0 0 rgba(168, 71, 47, 0.45);
+  animation: current-pulse 2s var(--ease-out) infinite;
+}
+
+.track__step.is-current.is-final .track__dot {
+  color: var(--color-krem-50);
+  background-color: var(--color-sukses);
+  border-color: var(--color-sukses);
+  animation: none;
+}
+
+@keyframes current-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(168, 71, 47, 0.45); }
+  70%  { box-shadow: 0 0 0 12px rgba(168, 71, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(168, 71, 47, 0); }
+}
+
+/* ---------- Ditolak ---------- */
+.status-card--ditolak {
+  border-color: var(--color-bahaya);
+}
+
+.status-card__reason {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-sm);
+  color: var(--color-bahaya);
+  background-color: rgba(179, 55, 43, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Isi pesanan ---------- */
+.status-items {
+  display: grid;
+}
+
+.status-items li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block: var(--space-3);
+  border-bottom: 1px dashed var(--border-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+.status-actions {
+  display: grid;
+  gap: var(--space-3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-card,
+  .track__step.is-current .track__dot,
+  .track__step.is-done:not(:first-child)::before,
+  .track__step.is-current:not(:first-child)::before {
+    animation: none;
+  }
+}
+
+.status-note {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-sm);
+  background-color: var(--color-krem-200);
+  border-radius: var(--radius-sm);
+}

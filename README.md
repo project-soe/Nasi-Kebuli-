@@ -11,9 +11,15 @@ Database: Firebase Firestore. Pesanan dikirim ke WhatsApp penjual.
 
 ## Menjalankan di lokal
 ```
-python3 -m http.server 8080 -d public
+python3 dev-server.py
 ```
 Lalu buka http://localhost:8080 (jangan buka file HTML langsung).
+
+## Publikasi
+Otomatis ke GitHub Pages setiap push ke `main` (lihat `docs/05-deployment.md`).
+
+## Admin
+Buka `/admin/login.html`. Hanya akun yang terdaftar di koleksi `admins` yang bisa masuk.
 
 ## Pengaturan Firebase (sekali saja)
 Lihat `docs/05-deployment.md`.

@@ -2,51 +2,6 @@
    pages/menu.css - Khusus halaman menu (menu.html)
    ===================================================== */
 
-/* ---------- Kepala halaman ---------- */
-.page-hero {
-  padding-block: var(--space-7);
-  background:
-    radial-gradient(circle at 15% 0%, rgba(201, 162, 75, 0.14), transparent 50%),
-    var(--bg-page-dark);
-}
-
-.page-hero__inner {
-  display: grid;
-  gap: var(--space-3);
-  justify-items: center;
-  text-align: center;
-}
-
-.page-hero__title {
-  font-size: var(--fs-2xl);
-}
-
-.page-hero__status {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: var(--space-3) var(--space-4);
-}
-
-.page-hero__hours {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--fs-sm);
-  color: rgba(246, 235, 211, 0.75);
-}
-
-/* ---------- Pita toko tutup ---------- */
-.store-banner {
-  padding-block: var(--space-3);
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  text-align: center;
-  color: var(--color-krem-50);
-  background-color: var(--color-bata-600);
-}
-
 /* ---------- Bar keranjang ---------- */
 .cart-bar__info {
   display: flex;
@@ -70,38 +25,4 @@
   font-family: var(--font-display);
   font-size: var(--fs-md);
   font-variant-numeric: tabular-nums;
-}
-
-/* ---------- Isi modal pesanan ---------- */
-.order-line__qty {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.order-line__remove {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  color: var(--color-bata-500);
-  border-radius: 50%;
-  transition: transform var(--dur-cepat) var(--ease-out), background-color var(--dur-cepat) var(--ease-out);
-}
-
-.order-line__remove:active {
-  transform: scale(0.88);
-  background-color: rgba(168, 71, 47, 0.12);
-}
-
-.order-line__remove svg {
-  width: 22px;
-  height: 22px;
-}
-
-.modal__body .order-summary__list {
-  margin-bottom: var(--space-3);
 }

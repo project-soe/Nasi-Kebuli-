@@ -237,3 +237,35 @@
     justify-content: flex-start;
   }
 }
+
+/* =====================================================
+   HALAMAN CHECKOUT (pages/checkout.css)
+   ===================================================== */
+@media (min-width: 1100px) {
+  .split > .order-summary {
+    order: 0;       /* desktop: form di kiri, ringkasan di kanan */
+  }
+
+  .form-card {
+    padding: var(--space-6);
+  }
+}
+
+/* =====================================================
+   ADMIN (pages/admin.css)
+   ===================================================== */
+@media (min-width: 768px) {
+  .order-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-tabs__inner {
+    max-width: 480px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .order-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

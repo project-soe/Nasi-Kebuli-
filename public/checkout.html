@@ -2,10 +2,144 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Checkout | Kebuli Ikhsan</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#2b1810">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <script>document.documentElement.classList.add('js');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/pages/checkout.css">
+  <link rel="stylesheet" href="css/responsive.css">
 </head>
+
 <body>
-  <!-- TODO: Checkout -->
+  <div class="page">
+
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="site-header__brand" href="index.html" aria-label="Kebuli Ikhsan, beranda">
+          <svg class="btn__icon" style="width:1.8rem;height:1.8rem" aria-hidden="true"><use href="assets/icons/sprite.svg#i-mark"/></svg>
+          <span data-store-name>Kebuli Ikhsan</span>
+        </a>
+        <nav class="site-nav" aria-label="Navigasi utama">
+          <ul class="site-nav__list">
+            <li><a href="index.html">Beranda</a></li>
+            <li><a href="menu.html">Menu</a></li>
+            <li><a href="index.html#cara-pesan">Cara Pesan</a></li>
+            <li><a href="index.html#kontak">Kontak</a></li>
+          </ul>
+        </nav>
+        <a class="btn btn--ghost btn--sm" href="menu.html">Kembali ke menu</a>
+      </div>
+    </header>
+
+    <main class="page__main">
+
+      <section class="page-hero section--dark">
+        <div class="container page-hero__inner">
+          <span class="section__eyebrow">Checkout</span>
+          <h1 class="page-hero__title">Hampir selesai</h1>
+          <span class="badge badge--pending" data-store-status>
+            <span class="badge__dot"></span>
+            <span data-store-status-text>Memeriksa status</span>
+          </span>
+        </div>
+      </section>
+
+      <div class="store-banner" id="store-banner" role="status" hidden>
+        <div class="container"><p id="store-banner-text"></p></div>
+      </div>
+
+      <section class="section">
+        <div class="container">
+
+          <!-- FORM + RINGKASAN -->
+          <div class="split" id="checkout-content" hidden>
+            <form class="form-card stack" id="checkout-form" novalidate>
+              <h2 class="form-card__title">Data pemesan</h2>
+
+              <div class="field" data-field="name">
+                <label for="f-name">Nama</label>
+                <input id="f-name" name="name" type="text" autocomplete="name" maxlength="60" placeholder="Nama kamu" required>
+                <span class="field__error" role="alert"></span>
+              </div>
+
+              <div class="field" data-field="phone">
+                <label for="f-phone">Nomor HP / WhatsApp</label>
+                <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" maxlength="20" placeholder="081234567890" required>
+                <span class="field__hint">Dipakai penjual untuk mengonfirmasi pesanan.</span>
+                <span class="field__error" role="alert"></span>
+              </div>
+
+              <div class="field" data-field="note">
+                <label for="f-note">Catatan (boleh dikosongkan)</label>
+                <textarea id="f-note" name="note" maxlength="300" rows="3" placeholder="Contoh: sambal dipisah, alamat pengantaran, jam ambil"></textarea>
+                <span class="field__error" role="alert"></span>
+              </div>
+
+              <button class="btn btn--lg btn--block" type="submit" id="submit-btn">Kirim Pesanan</button>
+              <p class="field__hint form-card__hint">
+                Pesanan tersimpan dulu, lalu kamu diarahkan mengirimnya ke WhatsApp penjual.
+              </p>
+            </form>
+
+            <aside class="order-summary" id="summary" aria-label="Ringkasan pesanan"></aside>
+          </div>
+
+          <!-- KERANJANG KOSONG -->
+          <div class="empty-state" id="checkout-empty" hidden>
+            <svg class="empty-state__icon" aria-hidden="true"><use href="assets/icons/sprite.svg#i-cart"/></svg>
+            <h2>Pesananmu masih kosong</h2>
+            <p>Pilih menu favoritmu dulu, ya.</p>
+            <a class="btn btn--lg" href="menu.html">Lihat Menu</a>
+            <a class="success__back" id="last-order-link" href="#" hidden>Lihat status pesanan terakhir</a>
+          </div>
+
+          <!-- BERHASIL -->
+          <div class="success" id="checkout-success" hidden></div>
+
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="site-footer__grid">
+          <div class="stack stack--sm">
+            <strong class="footer-brand" data-store-name>Kebuli Ikhsan</strong>
+            <p>Nasi kebuli ayam dan kambing khas Timur Tengah.</p>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Menu</strong>
+            <a href="menu.html">Daftar menu</a>
+            <a href="index.html#cara-pesan">Cara pesan</a>
+          </div>
+          <div class="stack stack--sm">
+            <strong>Bantuan</strong>
+            <a href="#" data-wa-link>Chat WhatsApp</a>
+            <span data-store-address></span>
+          </div>
+        </div>
+        <p class="site-footer__copy">&copy; <span id="year">2026</span> <span data-store-name>Kebuli Ikhsan</span>. Semua hak dilindungi.</p>
+      </div>
+    </footer>
+  </div>
+
+  <div class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script type="module" src="js/pages/checkout.js"></script>
 </body>
 </html>

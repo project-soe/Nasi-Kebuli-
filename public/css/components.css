@@ -522,6 +522,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .field__hint {
@@ -710,3 +711,39 @@
   opacity: 0.8;
 }
 
+
+/* =====================================================
+   BARIS PESANAN: stepper dan tombol hapus (modal menu + checkout)
+   ===================================================== */
+.order-line__qty {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.order-line__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--color-bata-500);
+  border-radius: 50%;
+  transition: transform var(--dur-cepat) var(--ease-out), background-color var(--dur-cepat) var(--ease-out);
+}
+
+.order-line__remove:active {
+  transform: scale(0.88);
+  background-color: rgba(168, 71, 47, 0.12);
+}
+
+.order-line__remove svg {
+  width: 22px;
+  height: 22px;
+}
+
+.modal__body .order-summary__list {
+  margin-bottom: var(--space-3);
+}

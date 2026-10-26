@@ -6,6 +6,22 @@
   <title>Kebuli Ikhsan | Nasi Kebuli Ayam & Kambing</title>
   <meta name="description" content="Nasi kebuli khas Timur Tengah dengan daging ayam dan kambing. Pesan mudah lewat website, kirim langsung ke WhatsApp.">
   <meta name="theme-color" content="#2b1810">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/icons/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- Pratinjau saat tautan dibagikan (WhatsApp, Facebook, dll.).
+       Alamat gambar harus lengkap; ganti bila memakai domain sendiri. -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:site_name" content="Kebuli Ikhsan">
+  <meta property="og:title" content="Kebuli Ikhsan | Nasi Kebuli Ayam &amp; Kambing">
+  <meta property="og:description" content="Nasi kebuli khas Timur Tengah dengan daging ayam dan kambing. Pesan mudah, kirim langsung ke WhatsApp.">
+  <meta property="og:image" content="https://project-soe.github.io/Nasi-Kebuli-/assets/images/branding/og-cover.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
 
   <!-- Wajib di <head>: tandai JS aktif + lewati splash bila sudah pernah tampil di sesi ini -->
   <script>
@@ -115,11 +131,9 @@
               <span class="steam" style="--i:1"></span>
               <span class="steam" style="--i:2"></span>
             </div>
-            <!-- GANTI dengan foto asli: <img src="assets/images/hero/hero.jpg" alt="Nasi kebuli kambing" ...> -->
-            <div class="photo-ph hero__photo" role="img" aria-label="Foto nasi kebuli (belum diisi)">
-              <svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg>
-              <span>Foto hero nasi kebuli</span>
-            </div>
+            <img class="hero__photo" src="assets/images/hero/hero.jpg"
+                 alt="Nasi kebuli ayam dengan acar, kuah, dan sambal"
+                 width="900" height="900" fetchpriority="high" decoding="async">
           </div>
 
         </div>
@@ -133,55 +147,8 @@
             <h2>Pilih favoritmu</h2>
           </header>
 
-          <!-- Data CONTOH. Tahap berikutnya diganti otomatis dari Google Sheets -->
-          <div class="grid-menu">
-
-            <article class="menu-card reveal" style="--i:0">
-              <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto kebuli ayam (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
-                <span class="menu-card__tag">Ayam</span>
-              </div>
-              <div class="menu-card__body">
-                <h3 class="menu-card__title">Nasi Kebuli Ayam</h3>
-                <p class="menu-card__desc">Nasi berempah dengan potongan ayam empuk, disajikan dengan acar dan sambal.</p>
-              </div>
-              <div class="menu-card__foot">
-                <span class="menu-card__price">Rp 35.000</span>
-                <a class="btn btn--sm" href="menu.html">Pesan</a>
-              </div>
-            </article>
-
-            <article class="menu-card reveal" style="--i:1">
-              <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto kebuli kambing (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
-                <span class="menu-card__tag">Kambing</span>
-              </div>
-              <div class="menu-card__body">
-                <h3 class="menu-card__title">Nasi Kebuli Kambing</h3>
-                <p class="menu-card__desc">Daging kambing empuk di atas nasi kebuli harum rempah pilihan.</p>
-              </div>
-              <div class="menu-card__foot">
-                <span class="menu-card__price">Rp 55.000</span>
-                <a class="btn btn--sm" href="menu.html">Pesan</a>
-              </div>
-            </article>
-
-            <article class="menu-card reveal" style="--i:2">
-              <div class="menu-card__media">
-                <div class="photo-ph" role="img" aria-label="Foto paket keluarga (belum diisi)"><svg aria-hidden="true"><use href="assets/icons/sprite.svg#i-photo"/></svg></div>
-                <span class="menu-card__tag">Paket</span>
-              </div>
-              <div class="menu-card__body">
-                <h3 class="menu-card__title">Paket Keluarga</h3>
-                <p class="menu-card__desc">Porsi besar untuk berbagi bersama keluarga, bisa pilih ayam atau kambing.</p>
-              </div>
-              <div class="menu-card__foot">
-                <span class="menu-card__price">Rp 150.000</span>
-                <a class="btn btn--sm" href="menu.html">Pesan</a>
-              </div>
-            </article>
-
-          </div>
+          <!-- Diisi otomatis dari menu (Firestore). Menu yang dicentang "menu andalan" di admin tampil di sini -->
+          <div class="grid-menu" id="featured-grid" aria-busy="true" aria-live="polite"></div>
 
           <p class="cluster cluster--center reveal" style="margin-top: var(--space-6)">
             <a class="btn btn--ghost" href="menu.html">Lihat semua menu</a>

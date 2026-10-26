@@ -19,6 +19,7 @@
 | description | string | teks singkat |
 | imageUrl | string | alamat https gambar (boleh kosong) |
 | available | boolean | false = tampil "Habis" |
+| featured | boolean | true = tampil di "Menu Andalan" beranda (maks. 3 pertama) |
 | sortOrder | number | urutan tampil (kecil = awal) |
 
 ## orders/{id}  (ID acak otomatis)

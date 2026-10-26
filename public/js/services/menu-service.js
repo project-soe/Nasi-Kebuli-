@@ -5,15 +5,15 @@ import { getFirebase } from './api.js';
 
 export const SAMPLE_MENU = [
   { id: 'contoh-ayam-1', name: 'Nasi Kebuli Ayam', category: 'ayam', price: 35000,
-    description: 'Nasi berempah dengan potongan ayam empuk, disajikan dengan acar dan sambal.', imageUrl: '', available: true, sortOrder: 1 },
+    description: 'Nasi berempah dengan potongan ayam empuk, disajikan dengan acar dan sambal.', imageUrl: 'assets/images/menu/kebuli-ayam.jpg', available: true, featured: true, sortOrder: 1 },
   { id: 'contoh-ayam-2', name: 'Kebuli Ayam Jumbo', category: 'ayam', price: 45000,
-    description: 'Porsi lebih besar dengan paha ayam utuh untuk yang benar-benar lapar.', imageUrl: '', available: true, sortOrder: 2 },
+    description: 'Porsi lebih besar dengan paha ayam utuh untuk yang benar-benar lapar.', imageUrl: 'assets/images/menu/kebuli-ayam.jpg', available: true, sortOrder: 2 },
   { id: 'contoh-kambing-1', name: 'Nasi Kebuli Kambing', category: 'kambing', price: 55000,
-    description: 'Daging kambing empuk di atas nasi kebuli harum rempah pilihan.', imageUrl: '', available: true, sortOrder: 3 },
+    description: 'Daging kambing empuk di atas nasi kebuli harum rempah pilihan.', imageUrl: 'assets/images/menu/kebuli-kambing.jpg', available: true, featured: true, sortOrder: 3 },
   { id: 'contoh-kambing-2', name: 'Kebuli Kambing Jumbo', category: 'kambing', price: 70000,
-    description: 'Porsi besar daging kambing, cocok untuk dinikmati sepuasnya.', imageUrl: '', available: true, sortOrder: 4 },
+    description: 'Porsi besar daging kambing, cocok untuk dinikmati sepuasnya.', imageUrl: 'assets/images/menu/kebuli-kambing.jpg', available: true, sortOrder: 4 },
   { id: 'contoh-paket-1', name: 'Paket Keluarga', category: 'paket', price: 150000,
-    description: 'Porsi besar untuk berbagi bersama keluarga, bisa pilih ayam atau kambing.', imageUrl: '', available: true, sortOrder: 5 },
+    description: 'Porsi besar untuk berbagi bersama keluarga, bisa pilih ayam atau kambing.', imageUrl: '', available: true, featured: true, sortOrder: 5 },
 ];
 
 /** Rapikan dokumen dari database; kembalikan null bila datanya tidak layak */
@@ -29,6 +29,7 @@ function normalize(id, data = {}) {
     description: typeof data.description === 'string' ? data.description.trim() : '',
     imageUrl: typeof data.imageUrl === 'string' ? data.imageUrl.trim() : '',
     available: data.available !== false,
+    featured: data.featured === true,
     sortOrder: Number.isFinite(Number(data.sortOrder)) ? Number(data.sortOrder) : 999,
   };
 }
