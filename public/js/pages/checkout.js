@@ -5,8 +5,9 @@ import { h, icon } from '../core/dom.js';
 import { subscribeStore } from '../services/store-service.js';
 import {
   createOrder, validateCheckout, normalizePhone,
-  buildWhatsAppMessage, whatsappUrl, orderCode,
+  buildWhatsAppMessage, whatsappUrl, orderCode, MAX_LINES,
 } from '../services/order-service.js';
+import { fetchMenu } from '../services/menu-service.js';
 import { cart } from '../components/cart.js';
 import { orderLine, summaryRows, restoreFocus } from '../components/order-summary.js';
 import { showToast } from '../components/toast.js';
@@ -106,10 +107,24 @@ form.addEventListener('input', (event) => {
   }
 });
 
+/* ---------- samakan keranjang dengan menu & harga terbaru ---------- */
+async function syncCartWithMenu() {
+  try {
+    const { items, source } = await fetchMenu();
+    if (source !== 'firebase') return false;
+    const { removed, repriced } = cart.sync(items);
+    return removed.length > 0 || repriced.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+const PRICE_CHANGED = 'Menu atau harga baru saja berubah. Pesananmu sudah disesuaikan, silakan periksa lalu kirim lagi.';
+
 /* ---------- kirim ---------- */
 function errorMessage(error) {
   if (error?.code === 'permission-denied') {
-    return 'Pesanan ditolak. Toko mungkin baru saja tutup. Coba lagi sebentar lagi.';
+    return 'Pesanan ditolak. Toko mungkin baru saja tutup, atau menu berubah. Coba lagi sebentar lagi.';
   }
   if (error?.code === 'timeout' || error?.code === 'unavailable') {
     return 'Koneksi lambat. Pesananmu belum terkirim, silakan tekan Kirim Pesanan lagi.';
@@ -128,6 +143,11 @@ form.addEventListener('submit', async (event) => {
 
   const { items, total, count } = cart.getState();
   if (count === 0) return;
+
+  if (items.length > MAX_LINES) {
+    showToast(`Maksimal ${MAX_LINES} jenis menu per pesanan. Kurangi satu menu atau kirim sebagai dua pesanan.`, { type: 'error', duration: 5000 });
+    return;
+  }
 
   const values = readForm();
   const errors = validateCheckout(values);
@@ -157,7 +177,9 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     console.warn('[checkout] gagal menyimpan pesanan:', error);
     state.attemptId = error?.orderId || state.attemptId;
-    showToast(errorMessage(error), { type: 'error', duration: 5000 });
+    // ditolak server: kemungkinan harga/menu berubah. Sinkronkan lalu beri tahu pelanggan.
+    const adjusted = error?.code === 'permission-denied' && (await syncCartWithMenu());
+    showToast(adjusted ? PRICE_CHANGED : errorMessage(error), { type: 'error', duration: 6000 });
   } finally {
     state.submitting = false;
     refreshSubmit();
@@ -200,6 +222,9 @@ cart.subscribe((cartState, change) => {
   }
   updateView(cartState);
 });
+
+// pastikan harga di keranjang sama dengan menu terbaru sebelum pelanggan mengirim
+syncCartWithMenu().then((adjusted) => { if (adjusted) showToast(PRICE_CHANGED, { duration: 6000 }); });
 
 subscribeStore((store) => {
   state.store = store;

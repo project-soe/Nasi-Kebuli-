@@ -59,7 +59,7 @@ function track(status) {
 
 function chatLink(order) {
   const code = orderCode(order.id);
-  const message = `Halo ${store.name}, saya ingin menanyakan pesanan ${code} atas nama ${order.customerName}.`;
+  const message = `Halo ${store.name}, saya ingin menanyakan pesanan ${code}.`;
   return h('a', {
     class: 'btn btn--wa btn--lg', target: '_blank', rel: 'noopener noreferrer',
     href: whatsappUrl(store.whatsapp, message),
@@ -85,13 +85,12 @@ function render(order) {
         : track(order.status)),
 
     h('article', { class: 'status-card' },
-      h('h2', { class: 'form-card__title', text: `Pesanan atas nama ${order.customerName}` }),
+      h('h2', { class: 'form-card__title', text: 'Isi pesananmu' }),
       h('ul', { class: 'status-items' },
         order.items.map((item) =>
           h('li', {},
             h('span', { text: `${item.qty}\u00d7 ${item.name}` }),
             h('span', { text: formatRupiah(item.price * item.qty) })))),
-      order.note ? h('p', { class: 'status-note', text: `Catatan: ${order.note}` }) : null,
       h('div', { class: 'order-summary__row order-summary__row--total' },
         h('span', { text: 'Total' }),
         h('span', { class: 'order-summary__amount', text: formatRupiah(order.total) })),

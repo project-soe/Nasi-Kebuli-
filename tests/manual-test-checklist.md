@@ -24,6 +24,7 @@ Jalankan sebelum setiap rilis. Uji di HP (utama), lalu tablet/desktop.
 - [ ] Keranjang kosong: tampil keadaan kosong
 
 ## Status pesanan
+- [ ] Halaman status TIDAK menampilkan nama, HP, atau catatan
 - [ ] Tautan dari checkout menampilkan pesanan yang benar
 - [ ] Status berubah sendiri saat admin mengubahnya
 - [ ] Pesanan ditolak: alasan tampil

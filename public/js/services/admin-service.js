@@ -58,15 +58,26 @@ export function subscribeOrders(onData, onError) {
   return () => { stopped = true; unsubscribe(); };
 }
 
-/** Ubah status + catat riwayat dalam satu transaksi */
+/** Ubah status di pesanan lengkap + salinan publik + riwayat, dalam satu transaksi */
 export async function updateOrderStatus(order, status, { reason = '', by = '' } = {}) {
   const { db, fs } = await getFirebase();
   const ref = fs.doc(db, 'orders', order.id);
+  const statusRef = fs.doc(db, 'orderStatus', order.id);
   const batch = fs.writeBatch(db);
 
   const patch = { status };
   if (status === 'ditolak' && reason) patch.rejectReason = reason;
   batch.update(ref, patch);
+
+  // salinan publik tanpa data pribadi; merge juga melengkapi pesanan lama yang belum punya salinan
+  const publicCopy = {
+    status,
+    items: order.items.map(({ id, name, price, qty }) => ({ id, name, price, qty })),
+    total: order.total,
+  };
+  if (order.createdAt instanceof Date) publicCopy.createdAt = order.createdAt;
+  if (status === 'ditolak') publicCopy.rejectReason = reason || '';
+  batch.set(statusRef, publicCopy, { merge: true });
 
   const entry = { from: order.status, to: status, by, at: fs.serverTimestamp() };
   if (reason) entry.reason = reason;

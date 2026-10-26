@@ -1,10 +1,18 @@
 // services/order-service.js - validasi checkout, simpan pesanan ke Firestore,
-// dan susun pesan WhatsApp.
+// susun pesan WhatsApp, dan pantau status pesanan.
+//
+// Satu pesanan = dua dokumen yang ditulis BERSAMAAN (satu batch):
+//   orders/{id}       lengkap (nama, HP, catatan) - hanya admin yang bisa membaca
+//   orderStatus/{id}  salinan publik tanpa data pribadi - dibaca pelanggan lewat ID
+// Harga/total diperiksa ulang oleh aturan Firestore terhadap data menu.
 
 import { formatRupiah } from '../core/formatters.js';
 import { getFirebase } from './api.js';
 
 const SAVE_TIMEOUT_MS = 15000;
+
+/** Batas jenis menu berbeda per pesanan (selaras dengan firebase/firestore.rules) */
+export const MAX_LINES = 6;
 
 /* ---------- validasi ---------- */
 
@@ -67,42 +75,50 @@ function withTimeout(promise, ms) {
  */
 export async function createOrder({ name, phone, note, items, total }, { orderId } = {}) {
   const { db, fs } = await getFirebase();
-  const ref = orderId ? fs.doc(db, 'orders', orderId) : fs.doc(fs.collection(db, 'orders'));
+  const orderRef = orderId ? fs.doc(db, 'orders', orderId) : fs.doc(fs.collection(db, 'orders'));
+  const statusRef = fs.doc(db, 'orderStatus', orderRef.id);
 
-  const payload = {
+  // baris pesanan HARUS identik di kedua dokumen (diperiksa aturan Firestore)
+  const lines = items.map(({ id, name: itemName, price, qty }) => ({ id, name: itemName, price, qty }));
+  const createdAt = fs.serverTimestamp();
+
+  const order = {
     customerName: name.trim(),
     phone: normalizePhone(phone),
-    items: items.map(({ id, name: itemName, price, qty }) => ({ id, name: itemName, price, qty })),
+    items: lines,
     total,
     status: 'menunggu',
-    createdAt: fs.serverTimestamp(),
+    createdAt,
   };
-  if (note && note.trim()) payload.note = note.trim();
+  if (note && note.trim()) order.note = note.trim();
+
+  const publicCopy = { items: lines, total, status: 'menunggu', createdAt };
 
   try {
-    await withTimeout(fs.setDoc(ref, payload), SAVE_TIMEOUT_MS);
-    return { id: ref.id };
+    const batch = fs.writeBatch(db);
+    batch.set(orderRef, order);
+    batch.set(statusRef, publicCopy);
+    await withTimeout(batch.commit(), SAVE_TIMEOUT_MS);
+    return { id: orderRef.id };
   } catch (error) {
     // percobaan ulang: bila pesanan ternyata sudah tersimpan, anggap berhasil
     if (orderId && error.code === 'permission-denied') {
       try {
-        if ((await fs.getDoc(ref)).exists()) return { id: ref.id };
+        if ((await fs.getDoc(statusRef)).exists()) return { id: orderRef.id };
       } catch { /* abaikan, lempar error asli */ }
     }
-    error.orderId = ref.id;
+    error.orderId = orderRef.id;
     throw error;
   }
 }
 
-/* ---------- pantau satu pesanan (halaman status pelanggan) ---------- */
+/* ---------- pantau status satu pesanan (halaman status pelanggan) ---------- */
 
 const toDate = (ts) => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);
 
-function normalizeOrderDoc(id, d = {}) {
+function normalizeStatusDoc(id, d = {}) {
   return {
     id,
-    customerName: String(d.customerName || ''),
-    note: String(d.note || ''),
     items: Array.isArray(d.items)
       ? d.items.map((i) => ({
           name: String(i.name || ''), price: Number(i.price) || 0, qty: Number(i.qty) || 0,
@@ -116,7 +132,7 @@ function normalizeOrderDoc(id, d = {}) {
 }
 
 /**
- * Pantau satu pesanan secara langsung.
+ * Pantau status satu pesanan secara langsung (dokumen publik orderStatus).
  * onData(order | null): null = pesanan tidak ditemukan.
  * @returns {() => void}
  */
@@ -128,8 +144,8 @@ export function subscribeOrder(id, onData, onError) {
     .then(({ db, fs }) => {
       if (stopped) return;
       unsubscribe = fs.onSnapshot(
-        fs.doc(db, 'orders', id),
-        (snap) => onData(snap.exists() ? normalizeOrderDoc(snap.id, snap.data({ serverTimestamps: 'estimate' })) : null),
+        fs.doc(db, 'orderStatus', id),
+        (snap) => onData(snap.exists() ? normalizeStatusDoc(snap.id, snap.data({ serverTimestamps: 'estimate' })) : null),
         onError
       );
     })
