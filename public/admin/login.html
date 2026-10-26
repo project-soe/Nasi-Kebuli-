@@ -2,10 +2,80 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login Admin | Kebuli Ikhsan</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Masuk Admin | Kebuli Ikhsan</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#2b1810">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="../assets/icons/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <script>document.documentElement.classList.add('js');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/tokens.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/components.css">
+  <link rel="stylesheet" href="../css/animations.css">
+  <link rel="stylesheet" href="../css/pages/admin.css">
+  <link rel="stylesheet" href="../css/responsive.css">
 </head>
-<body>
-  <!-- TODO: Login Admin -->
+
+<body class="admin-login">
+  <main class="login">
+    <div class="login-card">
+      <svg class="login-card__mark" aria-hidden="true"><use href="../assets/icons/sprite.svg#i-mark"/></svg>
+      <h1 class="login-card__title">Masuk Admin</h1>
+      <p class="login-card__lead">Khusus pemilik toko untuk mengelola pesanan dan menu.</p>
+
+      <form class="stack" id="login-form" novalidate onsubmit="return false">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input id="login-email" type="email" autocomplete="username" inputmode="email" placeholder="email@contoh.com" required>
+        </div>
+
+        <div class="field">
+          <label for="login-password">Kata sandi</label>
+          <div class="input-group">
+            <input id="login-password" type="password" autocomplete="current-password" required>
+            <button class="input-group__btn" type="button" id="toggle-password" aria-pressed="false">Lihat</button>
+          </div>
+        </div>
+
+        <p class="login-error" id="login-error" role="alert" hidden></p>
+
+        <button class="btn btn--lg btn--block" type="submit" id="login-submit">Masuk</button>
+      </form>
+
+      <a class="login-card__back" href="../index.html">&larr; Kembali ke situs</a>
+    </div>
+  </main>
+
+  <!-- Diagnosa: bila skrip halaman tidak berjalan, tampilkan kemungkinan penyebabnya -->
+  <script>
+    (function () {
+      function show(text) {
+        var box = document.getElementById('login-error') || document.getElementById('admin-loading-text');
+        if (box) { box.textContent = text; box.hidden = false; }
+      }
+      window.addEventListener('error', function (e) { show('Kesalahan skrip: ' + (e.message || 'tidak diketahui')); });
+      window.addEventListener('unhandledrejection', function (e) {
+        show('Kesalahan: ' + ((e.reason && (e.reason.code || e.reason.message)) || 'tidak diketahui'));
+      });
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          if (window.__appReady) return;
+          show(location.protocol === 'file:'
+            ? 'Halaman dibuka langsung dari file. Buka lewat server lokal, misalnya http://localhost:8080/admin/login.html'
+            : 'Skrip halaman gagal dimuat. Muat ulang halaman dan pastikan server lokal masih berjalan.');
+        }, 3000);
+      });
+    })();
+  </script>
+  <script type="module" src="../js/pages/admin-login.js"></script>
 </body>
 </html>
