@@ -1,0 +1,23 @@
+# Konfigurasi Netlify - situs statis murni (tanpa langkah build).
+# File ini menetapkan folder yang dipublikasikan, jadi tidak bergantung pada
+# pengaturan di dashboard Netlify.
+
+[build]
+  publish = "public"
+
+# Keamanan dasar + HTML/JS/CSS selalu diperiksa ulang ke server
+# (perubahan yang baru di-deploy langsung terlihat, tanpa terjebak cache lama)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Gambar boleh disimpan sebentar di perangkat (nama file tetap, jadi tidak dibuat terlalu lama)
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"
