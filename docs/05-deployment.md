@@ -1,31 +1,37 @@
 # 05 - Deployment
 
+Hosting: **Firebase Hosting** (folder yang dipublikasikan: `public`).
+
 ## A. Menjalankan lokal
     python3 dev-server.py        # http://localhost:8080 (tanpa cache)
 
 ## B. Menyiapkan Firebase (sekali)
 1. Firestore Database > Create database (lokasi asia-southeast2 / Jakarta).
-2. Tab Rules: tempel isi `firebase/firestore.rules` > Publish.
+2. Pasang aturan: tempel isi `firebase/firestore.rules` di tab Rules lalu Publish,
+   ATAU lewat CLI (lebih aman dari salah tempel): tambahkan ke `firebase.json`
+       "firestore": { "rules": "firebase/firestore.rules" }
+   lalu jalankan `firebase deploy --only firestore:rules`.
 3. Authentication > Sign-in method: aktifkan Email/Password > buat akun admin.
-4. Firestore: buat koleksi `admins`, dokumen dengan ID = UID akun admin (salin-tempel), isi satu field bebas.
-5. Login ke `/admin/login.html`, tab Toko: isi nama, WhatsApp, jam, alamat. Tab Menu: isi menu.
+4. Firestore: koleksi `admins`, dokumen dengan ID = UID akun admin (salin-tempel), isi satu field bebas.
+5. Login ke `/admin/login.html`, tab Toko: isi nama, WhatsApp, jam, alamat, ongkir, metode bayar.
+   Tab Menu: isi menu.
 
-## B2. Anti-spam (disarankan sebelum situs dibuka ke publik)
-Aktifkan App Check, langkah lengkap di `docs/04-security.md` bagian "Mengaktifkan App Check".
+## B2. Anti-spam
+Aktifkan App Check (langkah di `docs/04-security.md`). Daftarkan domain hosting
+(`<project>.web.app`, `<project>.firebaseapp.com`) di reCAPTCHA.
 
-## C. Publikasi ke GitHub Pages (otomatis)
-1. Pastikan file `.github/workflows/pages.yml` ikut ter-push.
-2. Di GitHub: repo > Settings > Pages > Source: **GitHub Actions**.
-3. Setiap `git push` ke cabang `main`, situs diperbarui otomatis (tab Actions menunjukkan progres).
-4. Alamat situs: `https://project-soe.github.io/Nasi-Kebuli-/`
-5. WAJIB: Firebase Console > Authentication > Settings > Authorized domains > Add domain:
-   `project-soe.github.io` (tanpa https:// dan tanpa nama repo). Tanpa ini login admin gagal di situs publik.
+## C. Publikasi
+    firebase deploy --only hosting
+Setiap kali kode atau aturan berubah: `firebase deploy --only hosting,firestore:rules`.
+Domain `*.web.app` dan `*.firebaseapp.com` otomatis diizinkan untuk login (Authorized domains).
+Bila memakai domain sendiri, tambahkan juga di Authentication > Settings > Authorized domains.
 
-## D. Domain sendiri (opsional)
-Settings > Pages > Custom domain, lalu tambahkan domain itu juga di Authorized domains Firebase.
+## D. Pemeriksaan otomatis (GitHub Actions)
+Setiap push menjalankan `.github/workflows/ci.yml`: pemeriksaan sintaks JavaScript dan tes aturan
+Firestore. Jangan publikasikan bila tab Actions menampilkan tanda silang merah.
 
 ## E. Alur memperbarui situs
     git add .
     git commit -m "Pesan singkat perubahan"
     git push
-Tunggu 1-2 menit, lalu muat ulang situs (bila tampilan lama masih muncul, hapus cache browser).
+    firebase deploy --only hosting,firestore:rules

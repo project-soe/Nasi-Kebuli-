@@ -59,6 +59,15 @@ yang tidak membawa bukti berasal dari situs asli (reCAPTCHA v3). Gratis, tanpa C
   Pemilik tetap memeriksa pesanan sebelum menekan Terima.
 - Siapa pun yang memegang tautan status dapat melihat isi dan status pesanan itu.
 
+## Tes otomatis aturan Firestore
+`tests/rules/firestore.rules.test.mjs` menjalankan Firebase Emulator dan memeriksa lebih dari 60 skenario:
+pesanan sah diterima; harga murah, total palsu, nama tertukar, ongkir diakali, metode bayar tidak aktif,
+toko tutup, field tambahan, dan salinan publik yang tidak cocok ditolak; serta hak baca/tulis
+pelanggan, admin, dan akun biasa.
+- Berjalan otomatis di GitHub Actions pada setiap push (tab Actions; centang hijau = lolos).
+- Setiap kali `firebase/firestore.rules` diubah, tambahkan tes untuk perubahan itu.
+- Menjalankan lokal butuh Java; di Termux proot lebih mudah mengandalkan GitHub Actions.
+
 ## Praktik
 - Jangan commit: file service account (*.json berisi private_key), .env.
 - Semua teks dari database ditampilkan lewat textContent (anti XSS).
