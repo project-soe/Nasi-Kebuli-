@@ -56,3 +56,9 @@ export function timeAgo(date) {
   if (minutes < 60 * 24) return `${Math.floor(minutes / 60)} jam lalu`;
   return formatDateTime(date);
 }
+
+const PAYMENT_LABELS = { tunai: 'Tunai', transfer: 'Transfer bank', qris: 'QRIS' };
+
+export function paymentLabel(method) {
+  return PAYMENT_LABELS[method] || '';
+}

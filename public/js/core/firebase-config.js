@@ -15,3 +15,11 @@ export const firebaseConfig = {
   messagingSenderId: "271430366667",
   appId: "1:271430366667:web:b7a34287add225c677f24e"
 };
+
+// Firebase App Check (anti-bot untuk Firestore).
+// Kosongkan siteKey = App Check dimatikan (situs tetap jalan seperti biasa).
+// Site key reCAPTCHA v3 bersifat PUBLIK, aman ada di sini. JANGAN tulis Secret key di file ini.
+// Cara mengisi: lihat docs/04-security.md bagian "Mengaktifkan App Check".
+export const appCheckConfig = {
+  siteKey: '',
+};

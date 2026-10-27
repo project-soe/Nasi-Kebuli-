@@ -9,6 +9,16 @@ const DEFAULT_STORE = {
   ...STORE,
   isOpen: true,
   closedMessage: 'Toko sedang tutup. Silakan kembali pada jam buka.',
+  pickupEnabled: true,
+  deliveryEnabled: true,
+  deliveryFee: 0,
+  deliveryNote: '',
+  paymentCash: true,
+  paymentTransfer: false,
+  paymentQris: false,
+  transferInfo: '',
+  qrisImage: '',
+  paymentNote: '',
 };
 
 function normalize(data = {}) {
@@ -21,6 +31,16 @@ function normalize(data = {}) {
     defaultMessage: DEFAULT_STORE.defaultMessage,
     closedMessage: text(data.closedMessage, DEFAULT_STORE.closedMessage),
     isOpen: data.isOpen !== false,
+    pickupEnabled: data.pickupEnabled !== false,
+    deliveryEnabled: data.deliveryEnabled !== false,
+    deliveryFee: Math.min(500000, Math.max(0, Math.round(Number(data.deliveryFee) || 0))),
+    deliveryNote: text(data.deliveryNote, ''),
+    paymentCash: data.paymentCash !== false,
+    paymentTransfer: data.paymentTransfer === true,
+    paymentQris: data.paymentQris === true,
+    transferInfo: text(data.transferInfo, ''),
+    qrisImage: text(data.qrisImage, ''),
+    paymentNote: text(data.paymentNote, ''),
   };
 }
 

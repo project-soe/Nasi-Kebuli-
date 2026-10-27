@@ -6,18 +6,30 @@ import { formatRupiah, formatDateTime, statusLabel } from '../core/formatters.js
 import { subscribeStore } from '../services/store-service.js';
 import { subscribeOrder, orderCode, whatsappUrl } from '../services/order-service.js';
 import { showToast } from '../components/toast.js';
+import { createPaymentInfo } from '../components/payment-info.js';
 
 const root = document.getElementById('status-root');
 const titleEl = document.getElementById('status-title');
 
 const STEPS = ['menunggu', 'diterima', 'diproses', 'selesai'];
-const MESSAGES = {
-  menunggu: 'Menunggu konfirmasi penjual. Pastikan pesananmu sudah dikirim ke WhatsApp penjual.',
-  diterima: 'Pesananmu sudah diterima penjual. Terima kasih!',
-  diproses: 'Pesananmu sedang disiapkan dengan penuh cinta.',
-  selesai: 'Pesananmu sudah selesai. Selamat menikmati!',
-  ditolak: 'Mohon maaf, pesananmu belum bisa diproses.',
-};
+function messageFor(order) {
+  const antar = order.fulfillment === 'antar';
+  switch (order.status) {
+    case 'menunggu': return 'Menunggu konfirmasi penjual. Pastikan pesananmu sudah dikirim ke WhatsApp penjual.';
+    case 'diterima': return 'Pesananmu sudah diterima penjual. Terima kasih!';
+    case 'diproses': return antar
+      ? 'Pesananmu sedang disiapkan dan akan segera diantar.'
+      : 'Pesananmu sedang disiapkan. Penjual akan mengabari saat sudah bisa diambil.';
+    case 'selesai': return antar
+      ? 'Pesananmu sudah diantar. Selamat menikmati!'
+      : 'Pesananmu sudah selesai dan siap diambil. Selamat menikmati!';
+    case 'ditolak': return 'Mohon maaf, pesananmu belum bisa diproses.';
+    default: return '';
+  }
+}
+
+const fulfillmentText = (order) =>
+  order.fulfillment === 'antar' ? 'Diantar' : order.fulfillment === 'ambil' ? 'Ambil di tempat' : '';
 
 let store = { ...STORE };
 let lastStatus = null;
@@ -78,8 +90,8 @@ function render(order) {
     h('article', { class: `status-card${rejected ? ' status-card--ditolak' : ''}` },
       h('div', { class: 'status-card__head' },
         h('span', { class: 'status-card__code', text: `Kode ${code}` }),
-        h('p', { class: 'status-card__message', text: MESSAGES[order.status] || '' }),
-        h('span', { class: 'status-card__time', text: `Dipesan ${formatDateTime(order.createdAt)}` })),
+        h('p', { class: 'status-card__message', text: messageFor(order) }),
+        h('span', { class: 'status-card__time', text: [`Dipesan ${formatDateTime(order.createdAt)}`, fulfillmentText(order)].filter(Boolean).join(' \u00b7 ') })),
       rejected
         ? (order.rejectReason ? h('p', { class: 'status-card__reason', text: `Alasan: ${order.rejectReason}` }) : null)
         : track(order.status)),
@@ -90,10 +102,18 @@ function render(order) {
         order.items.map((item) =>
           h('li', {},
             h('span', { text: `${item.qty}\u00d7 ${item.name}` }),
-            h('span', { text: formatRupiah(item.price * item.qty) })))),
+            h('span', { text: formatRupiah(item.price * item.qty) }))),
+        order.fulfillment === 'antar'
+          ? h('li', {},
+              h('span', { text: 'Ongkos kirim' }),
+              h('span', { text: order.deliveryFee > 0 ? formatRupiah(order.deliveryFee) : 'Gratis' }))
+          : null),
       h('div', { class: 'order-summary__row order-summary__row--total' },
         h('span', { text: 'Total' }),
         h('span', { class: 'order-summary__amount', text: formatRupiah(order.total) })),
+      rejected ? null : createPaymentInfo({
+        store, method: order.paymentMethod, total: order.total, paid: order.paid, fulfillment: order.fulfillment,
+      }),
       h('div', { class: 'status-actions' },
         chatLink(order),
         h('a', { class: 'btn btn--ghost', href: 'menu.html', text: 'Pesan lagi' })))

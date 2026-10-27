@@ -21,6 +21,11 @@ export function normalizeOrder(id, d = {}) {
         }))
       : [],
     total: Number(d.total) || 0,
+    fulfillment: d.fulfillment === 'antar' ? 'antar' : d.fulfillment === 'ambil' ? 'ambil' : '',
+    address: String(d.address || ''),
+    deliveryFee: Number(d.deliveryFee) || 0,
+    paymentMethod: ['tunai', 'transfer', 'qris'].includes(d.paymentMethod) ? d.paymentMethod : '',
+    paid: d.paid === true,
     status: String(d.status || 'menunggu'),
     createdAt: toDate(d.createdAt),
     rejectReason: String(d.rejectReason || ''),
@@ -58,30 +63,59 @@ export function subscribeOrders(onData, onError) {
   return () => { stopped = true; unsubscribe(); };
 }
 
+/**
+ * Salinan publik pesanan (tanpa data pribadi). Dipakai dengan merge, sehingga juga
+ * melengkapi pesanan lama yang belum punya dokumen orderStatus.
+ */
+function publicCopyOf(order, extra = {}) {
+  const copy = {
+    status: order.status,
+    items: order.items.map(({ id, name, price, qty }) => ({ id, name, price, qty })),
+    total: order.total,
+    ...extra,
+  };
+  if (order.createdAt instanceof Date) copy.createdAt = order.createdAt;
+  if (order.fulfillment) {
+    copy.fulfillment = order.fulfillment;
+    copy.deliveryFee = order.deliveryFee;
+  }
+  if (order.paymentMethod) copy.paymentMethod = order.paymentMethod;
+  return copy;
+}
+
 /** Ubah status di pesanan lengkap + salinan publik + riwayat, dalam satu transaksi */
 export async function updateOrderStatus(order, status, { reason = '', by = '' } = {}) {
   const { db, fs } = await getFirebase();
   const ref = fs.doc(db, 'orders', order.id);
-  const statusRef = fs.doc(db, 'orderStatus', order.id);
   const batch = fs.writeBatch(db);
 
   const patch = { status };
   if (status === 'ditolak' && reason) patch.rejectReason = reason;
   batch.update(ref, patch);
 
-  // salinan publik tanpa data pribadi; merge juga melengkapi pesanan lama yang belum punya salinan
-  const publicCopy = {
-    status,
-    items: order.items.map(({ id, name, price, qty }) => ({ id, name, price, qty })),
-    total: order.total,
-  };
-  if (order.createdAt instanceof Date) publicCopy.createdAt = order.createdAt;
-  if (status === 'ditolak') publicCopy.rejectReason = reason || '';
-  batch.set(statusRef, publicCopy, { merge: true });
+  const extra = { status };
+  if (status === 'ditolak') extra.rejectReason = reason || '';
+  batch.set(fs.doc(db, 'orderStatus', order.id), publicCopyOf(order, extra), { merge: true });
 
   const entry = { from: order.status, to: status, by, at: fs.serverTimestamp() };
   if (reason) entry.reason = reason;
   batch.set(fs.doc(fs.collection(ref, 'history')), entry);
+
+  await batch.commit();
+}
+
+/** Tandai pesanan lunas / belum lunas (pesanan lengkap + salinan publik) */
+export async function setOrderPaid(order, paid, { by = '' } = {}) {
+  const { db, fs } = await getFirebase();
+  const ref = fs.doc(db, 'orders', order.id);
+  const batch = fs.writeBatch(db);
+
+  batch.update(ref, { paid });
+  batch.set(fs.doc(db, 'orderStatus', order.id), publicCopyOf(order, { paid }), { merge: true });
+  batch.set(fs.doc(fs.collection(ref, 'history')), {
+    from: order.status, to: order.status, by, at: fs.serverTimestamp(),
+    reason: paid ? 'Ditandai lunas' : 'Tanda lunas dibatalkan',
+  });
 
   await batch.commit();
 }

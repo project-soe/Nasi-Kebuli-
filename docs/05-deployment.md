@@ -10,6 +10,9 @@
 4. Firestore: buat koleksi `admins`, dokumen dengan ID = UID akun admin (salin-tempel), isi satu field bebas.
 5. Login ke `/admin/login.html`, tab Toko: isi nama, WhatsApp, jam, alamat. Tab Menu: isi menu.
 
+## B2. Anti-spam (disarankan sebelum situs dibuka ke publik)
+Aktifkan App Check, langkah lengkap di `docs/04-security.md` bagian "Mengaktifkan App Check".
+
 ## C. Publikasi ke GitHub Pages (otomatis)
 1. Pastikan file `.github/workflows/pages.yml` ikut ter-push.
 2. Di GitHub: repo > Settings > Pages > Source: **GitHub Actions**.

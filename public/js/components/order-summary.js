@@ -33,16 +33,34 @@ export function orderLine(item) {
       }, icon('i-trash', ''))));
 }
 
-/** Baris "Jumlah porsi" dan "Total" */
-export function summaryRows({ count, total }) {
-  return [
+/**
+ * Baris ringkasan. total = jumlah harga menu (belum termasuk ongkir).
+ * delivery = null (tanpa ongkir) atau { fee } untuk pesanan yang diantar.
+ */
+export function summaryRows({ count, total, delivery = null }) {
+  const rows = [
     h('div', { class: 'order-summary__row' },
       h('span', { text: 'Jumlah porsi' }),
       h('span', { text: String(count) })),
+  ];
+
+  if (delivery) {
+    rows.push(
+      h('div', { class: 'order-summary__row' },
+        h('span', { text: 'Subtotal' }),
+        h('span', { text: formatRupiah(total) })),
+      h('div', { class: 'order-summary__row' },
+        h('span', { text: 'Ongkos kirim' }),
+        h('span', { text: delivery.fee > 0 ? formatRupiah(delivery.fee) : 'Gratis' }))
+    );
+  }
+
+  rows.push(
     h('div', { class: 'order-summary__row order-summary__row--total' },
       h('span', { text: 'Total' }),
-      h('span', { class: 'order-summary__amount', text: formatRupiah(total) })),
-  ];
+      h('span', { class: 'order-summary__amount', text: formatRupiah(total + (delivery ? delivery.fee : 0)) }))
+  );
+  return rows;
 }
 
 /** Jaga fokus pada tombol yang sama setelah daftar digambar ulang */

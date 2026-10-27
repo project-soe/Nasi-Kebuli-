@@ -9,6 +9,16 @@
 | hours | string | 10.00 - 21.00 |
 | address | string | alamat toko |
 | closedMessage | string | Toko sedang tutup... |
+| pickupEnabled | boolean | true = opsi "Ambil di tempat" tersedia |
+| deliveryEnabled | boolean | true = opsi "Diantar" tersedia |
+| deliveryFee | number | ongkos kirim tarif tetap (Rp), 0 = gratis, maks. 500000 |
+| deliveryNote | string | keterangan pengantaran yang tampil di checkout |
+| paymentCash | boolean | true (bawaan) = tunai/bayar saat diterima |
+| paymentTransfer | boolean | true = transfer bank / e-wallet (wajib isi transferInfo) |
+| paymentQris | boolean | true = QRIS (wajib isi qrisImage) |
+| transferInfo | string | nomor rekening/e-wallet, satu per baris |
+| qrisImage | string | jalur gambar QRIS (mis. assets/images/branding/qris.jpg) atau tautan https |
+| paymentNote | string | catatan pembayaran (opsional) |
 
 ## menu/{id}  (satu dokumen per menu)
 | Field | Tipe | Contoh |
@@ -28,18 +38,27 @@
 | customerName | string | 2-60 karakter |
 | phone | string | format 08xxxxxxxxxx |
 | note | string | opsional, maks 300 |
+| fulfillment | string | `ambil` (ambil di tempat) atau `antar` (diantar) |
+| address | string | alamat pengantaran 10-200 huruf; hanya ada bila `antar` |
+| deliveryFee | number | ongkir; HARUS sama dengan pengaturan toko (0 bila `ambil`) |
+| paymentMethod | string | `tunai`, `transfer`, atau `qris`; harus aktif di pengaturan toko |
+| paid | boolean | tanda lunas, hanya diubah admin |
 | items | array | [{id, name, price, qty}] - maks. 6 baris, qty 1-20 |
-| total | number | HARUS sama dengan jumlah (price x qty) semua baris (diperiksa server) |
+| total | number | HARUS sama dengan jumlah (price x qty) semua baris + deliveryFee (diperiksa server) |
 | status | string | menunggu, diterima, diproses, selesai, ditolak |
 | createdAt | timestamp | waktu server |
 | rejectReason | string | alasan penolakan (diisi admin) |
 
 ## orderStatus/{id}  (ID sama dengan orders/{id}) - salinan PUBLIK tanpa data pribadi
-Dibaca pelanggan di halaman status lewat ID acak. Tidak berisi nama, HP, atau catatan.
+Dibaca pelanggan di halaman status lewat ID acak. Tidak berisi nama, HP, alamat, atau catatan.
 | Field | Tipe |
 |---|---|
 | items | array (identik dengan orders/{id}) |
 | total | number |
+| fulfillment | string (`ambil` / `antar`) |
+| deliveryFee | number |
+| paymentMethod | string (`tunai` / `transfer` / `qris`) |
+| paid | boolean (diubah admin) |
 | status | string |
 | createdAt | timestamp |
 | rejectReason | string (opsional) |

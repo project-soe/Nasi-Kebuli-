@@ -23,6 +23,16 @@ Jalankan sebelum setiap rilis. Uji di HP (utama), lalu tablet/desktop.
 - [ ] Toko tutup: tombol kirim nonaktif
 - [ ] Keranjang kosong: tampil keadaan kosong
 
+## Cara terima (ambil / antar)
+- [ ] Pilihan Ambil di tempat / Diantar tampil sesuai pengaturan admin
+- [ ] Diantar: alamat wajib, ongkir masuk total; Ambil: tanpa alamat dan ongkir
+- [ ] Alamat tampil di admin dan WhatsApp, TIDAK tampil di halaman status pelanggan
+
+## Pembayaran
+- [ ] Metode bayar tampil sesuai pengaturan admin (satu metode saja: pilihan disembunyikan)
+- [ ] Halaman sukses: petunjuk bayar sesuai metode (rekening + salin, QRIS, atau tunai)
+- [ ] Admin: Tandai lunas / Batalkan lunas; halaman status pelanggan ikut berubah
+
 ## Status pesanan
 - [ ] Halaman status TIDAK menampilkan nama, HP, atau catatan
 - [ ] Tautan dari checkout menampilkan pesanan yang benar
@@ -41,3 +51,8 @@ Jalankan sebelum setiap rilis. Uji di HP (utama), lalu tablet/desktop.
 - [ ] HP 360px, tablet 768px, desktop 1100px: tidak ada konten terpotong atau menggeser ke samping
 - [ ] Mode "kurangi animasi" di pengaturan HP: animasi mati, situs tetap berfungsi
 - [ ] Alamat salah menampilkan 404 yang rapi
+
+## App Check (setelah diaktifkan)
+- [ ] Console > App Check > Cloud Firestore menampilkan permintaan Verified setelah situs dipakai
+- [ ] Setelah Enforce: menu, checkout, status pesanan, dan admin tetap berfungsi di situs publik
+- [ ] Setelah Enforce: `localhost` tetap berfungsi (domain terdaftar atau token debug)

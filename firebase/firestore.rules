@@ -5,7 +5,8 @@ rules_version = '2';
 // Ringkasan keamanan:
 // - Pelanggan boleh MEMBUAT pesanan, tetapi server (aturan ini) memeriksa SETIAP baris:
 //   harga dan nama harus sama dengan menu, jumlah 1-20, dan total harus sama dengan
-//   jumlah (harga x jumlah). Harga dari browser tidak dipercaya.
+//   jumlah (harga x jumlah) + ongkos kirim. Ongkir dan metode bayar juga harus sesuai pengaturan toko.
+//   Harga dari browser tidak dipercaya.
 // - Data pribadi (nama, HP, catatan) hanya ada di "orders" yang hanya bisa dibaca admin.
 // - Pelanggan memantau status lewat "orderStatus": salinan publik TANPA data pribadi,
 //   dibaca lewat ID acak yang hanya ia ketahui.
@@ -20,10 +21,26 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    // Pesanan hanya diterima saat toko buka (bila pengaturan toko belum dibuat, dianggap buka)
-    function storeIsOpen() {
+    // Pengaturan toko menentukan: toko buka, opsi ambil/antar yang aktif, dan ongkos kirim.
+    // Ongkos kirim di pesanan HARUS sama dengan pengaturan (bukan angka dari browser).
+    // Bila pengaturan toko belum dibuat: toko dianggap buka, dua opsi aktif, ongkir 0.
+    function settingsMatch(d, st) {
+      return st.get('isOpen', true) != false
+        && (d.fulfillment == 'antar'
+              ? st.get('deliveryEnabled', true) != false
+              : st.get('pickupEnabled', true) != false)
+        && d.deliveryFee == (d.fulfillment == 'antar' ? st.get('deliveryFee', 0) : 0)
+        && (d.paymentMethod == 'tunai'
+              ? st.get('paymentCash', true) != false
+              : d.paymentMethod == 'transfer'
+                  ? st.get('paymentTransfer', false) == true
+                  : st.get('paymentQris', false) == true);
+    }
+
+    function settingsOk(d) {
       return !exists(/databases/$(database)/documents/settings/store)
-        || get(/databases/$(database)/documents/settings/store).data.isOpen != false;
+        ? (d.deliveryFee == 0 && d.paymentMethod == 'tunai')
+        : settingsMatch(d, get(/databases/$(database)/documents/settings/store).data);
     }
 
     // Satu baris pesanan harus cocok dengan dokumen menunya
@@ -55,29 +72,45 @@ service cloud.firestore {
     }
 
     function validOrder(d) {
-      return d.keys().hasOnly(['customerName', 'phone', 'note', 'items', 'total', 'status', 'createdAt'])
-        && d.keys().hasAll(['customerName', 'phone', 'items', 'total', 'status', 'createdAt'])
+      return d.keys().hasOnly(['customerName', 'phone', 'note', 'fulfillment', 'address', 'deliveryFee',
+                               'paymentMethod', 'items', 'total', 'status', 'createdAt'])
+        && d.keys().hasAll(['customerName', 'phone', 'fulfillment', 'deliveryFee', 'paymentMethod',
+                            'items', 'total', 'status', 'createdAt'])
         && d.customerName is string && d.customerName.size() >= 2 && d.customerName.size() <= 60
         && d.phone is string && d.phone.matches('^08[1-9][0-9]{6,11}$')
         && (!('note' in d) || (d.note is string && d.note.size() <= 300))
+        && d.fulfillment in ['ambil', 'antar']
+        && d.paymentMethod in ['tunai', 'transfer', 'qris']
+        && (d.fulfillment == 'antar'
+              ? ('address' in d && d.address is string && d.address.size() >= 10 && d.address.size() <= 200)
+              : !('address' in d))
+        && d.deliveryFee is int && d.deliveryFee >= 0 && d.deliveryFee <= 500000
         && d.items is list && d.items.size() >= 1 && d.items.size() <= 6
         && lineAt(d, 0) && lineAt(d, 1) && lineAt(d, 2)
         && lineAt(d, 3) && lineAt(d, 4) && lineAt(d, 5)
         && d.total is int && d.total > 0 && d.total <= 10000000
         && d.total == lineTotal(d, 0) + lineTotal(d, 1) + lineTotal(d, 2)
-                    + lineTotal(d, 3) + lineTotal(d, 4) + lineTotal(d, 5)
+                    + lineTotal(d, 3) + lineTotal(d, 4) + lineTotal(d, 5) + d.deliveryFee
         && d.status == 'menunggu'
         && d.createdAt == request.time;
     }
 
-    // Salinan publik: harus identik dengan isi pesanan yang dibuat BERSAMAAN (batch yang sama)
+    // Salinan publik: harus identik dengan isi pesanan yang dibuat BERSAMAAN (batch yang sama).
+    // Tidak memuat nama, HP, alamat, atau catatan.
+    function statusMatchesOrder(d, o) {
+      return d.items == o.items
+        && d.total == o.total
+        && d.fulfillment == o.fulfillment
+        && d.deliveryFee == o.deliveryFee
+        && d.paymentMethod == o.paymentMethod;
+    }
+
     function validStatusDoc(d, orderId) {
-      return d.keys().hasOnly(['items', 'total', 'status', 'createdAt'])
-        && d.keys().hasAll(['items', 'total', 'status', 'createdAt'])
+      return d.keys().hasOnly(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
+        && d.keys().hasAll(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
         && d.status == 'menunggu'
         && d.createdAt == request.time
-        && d.items == getAfter(/databases/$(database)/documents/orders/$(orderId)).data.items
-        && d.total == getAfter(/databases/$(database)/documents/orders/$(orderId)).data.total;
+        && statusMatchesOrder(d, getAfter(/databases/$(database)/documents/orders/$(orderId)).data);
     }
 
     // ---------- koleksi ----------
@@ -97,7 +130,7 @@ service cloud.firestore {
     // Pelanggan hanya bisa membuat, dan wajib dibuat bersama dokumen orderStatus.
     match /orders/{orderId} {
       allow create: if validOrder(request.resource.data)
-        && storeIsOpen()
+        && settingsOk(request.resource.data)
         && existsAfter(/databases/$(database)/documents/orderStatus/$(orderId));
       allow get, list, update, delete: if isAdmin();
 

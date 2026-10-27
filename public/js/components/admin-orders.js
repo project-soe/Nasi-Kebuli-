@@ -1,7 +1,7 @@
 // components/admin-orders.js - daftar pesanan masuk (langsung/real-time) untuk admin
 import { h, icon } from '../core/dom.js';
-import { formatRupiah, statusLabel, timeAgo } from '../core/formatters.js';
-import { subscribeOrders, updateOrderStatus } from '../services/admin-service.js';
+import { formatRupiah, statusLabel, timeAgo, paymentLabel } from '../core/formatters.js';
+import { subscribeOrders, updateOrderStatus, setOrderPaid } from '../services/admin-service.js';
 import { orderCode, whatsappUrl } from '../services/order-service.js';
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
@@ -41,18 +41,38 @@ const waNumber = (phone) => String(phone).replace(/\D/g, '').replace(/^0/, '62')
 function chatMessage(order, storeName) {
   const code = orderCode(order.id);
   const name = order.customerName;
+  const antar = order.fulfillment === 'antar';
   switch (order.status) {
     case 'diterima':
-      return `Halo ${name}, pesanan ${code} sudah kami terima dengan total ${formatRupiah(order.total)}. Terima kasih sudah memesan di ${storeName}!`;
+      return `Halo ${name}, pesanan ${code} sudah kami terima dengan total ${formatRupiah(order.total)}${antar ? ' (sudah termasuk ongkos kirim)' : ''}. Terima kasih sudah memesan di ${storeName}!`;
     case 'diproses':
-      return `Halo ${name}, pesanan ${code} sedang kami siapkan. Mohon ditunggu ya.`;
+      return antar
+        ? `Halo ${name}, pesanan ${code} sedang kami siapkan dan akan segera diantar. Mohon ditunggu ya.`
+        : `Halo ${name}, pesanan ${code} sedang kami siapkan. Kami kabari saat sudah bisa diambil ya.`;
     case 'selesai':
-      return `Halo ${name}, pesanan ${code} sudah selesai. Terima kasih sudah memesan di ${storeName}!`;
+      return antar
+        ? `Halo ${name}, pesanan ${code} sudah kami antar. Terima kasih sudah memesan di ${storeName}!`
+        : `Halo ${name}, pesanan ${code} sudah selesai dan siap diambil. Terima kasih sudah memesan di ${storeName}!`;
     case 'ditolak':
       return `Mohon maaf ${name}, pesanan ${code} belum bisa kami proses.${order.rejectReason ? ` Alasan: ${order.rejectReason}.` : ''}`;
     default:
       return `Halo ${name}, kami dari ${storeName}. Terkait pesanan ${code}: `;
   }
+}
+
+/** Cara terima (diantar / ambil) + alamat dan tautan peta */
+function fulfillmentBlock(order) {
+  if (!order.fulfillment) return null; // pesanan lama tanpa data cara terima
+  const antar = order.fulfillment === 'antar';
+  return h('div', { class: 'order-card__fulfil' },
+    h('span', { class: `fulfil-pill fulfil-pill--${order.fulfillment}`, text: antar ? 'Diantar' : 'Ambil di tempat' }),
+    antar && order.address ? h('p', { class: 'order-card__address', text: order.address }) : null,
+    antar && order.address
+      ? h('a', {
+          class: 'order-card__map', target: '_blank', rel: 'noopener noreferrer', text: 'Buka di Google Maps',
+          href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`,
+        })
+      : null);
 }
 
 /**
@@ -73,6 +93,32 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
       showToast('Gagal mengubah status. Periksa koneksi, lalu coba lagi.', { type: 'error', duration: 4500 });
       button?.classList.remove('is-loading');
     }
+  }
+
+  async function togglePaid(order, button) {
+    button.classList.add('is-loading');
+    try {
+      await setOrderPaid(order, !order.paid, { by: adminEmail });
+      showToast(order.paid ? 'Tanda lunas dibatalkan' : `Pesanan ${orderCode(order.id)} ditandai lunas`, { type: 'success' });
+    } catch (error) {
+      console.warn('[admin] gagal mengubah status bayar:', error);
+      showToast('Gagal mengubah status pembayaran.', { type: 'error' });
+      button.classList.remove('is-loading');
+    }
+  }
+
+  /** Metode bayar + status lunas + tombol tandai lunas */
+  function paymentBlock(order) {
+    if (!order.paymentMethod) return null; // pesanan lama tanpa data pembayaran
+    const button = h('button', {
+      class: 'btn btn--ghost btn--sm', type: 'button',
+      text: order.paid ? 'Batalkan lunas' : 'Tandai lunas',
+    });
+    button.addEventListener('click', () => togglePaid(order, button));
+    return h('div', { class: 'order-card__pay' },
+      h('span', { class: 'fulfil-pill fulfil-pill--bayar', text: paymentLabel(order.paymentMethod) }),
+      h('span', { class: `pay-pill pay-pill--${order.paid ? 'lunas' : 'belum'}`, text: order.paid ? 'Lunas' : 'Belum dibayar' }),
+      order.status === 'ditolak' ? null : button);
   }
 
   function askReject(order) {
@@ -131,11 +177,19 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
             'aria-label': `Chat WhatsApp ${order.customerName}`,
           }, icon('i-wa'), 'Chat'))),
 
+      fulfillmentBlock(order),
+      paymentBlock(order),
+
       h('ul', { class: 'order-card__items' },
         order.items.map((item) =>
           h('li', {},
             h('span', { text: `${item.qty}\u00d7 ${item.name}` }),
-            h('span', { text: formatRupiah(item.price * item.qty) })))),
+            h('span', { text: formatRupiah(item.price * item.qty) }))),
+        order.fulfillment === 'antar'
+          ? h('li', {},
+              h('span', { text: 'Ongkos kirim' }),
+              h('span', { text: order.deliveryFee > 0 ? formatRupiah(order.deliveryFee) : 'Gratis' }))
+          : null),
 
       order.note ? h('p', { class: 'order-card__note', text: `Catatan: ${order.note}` }) : null,
       order.status === 'ditolak' && order.rejectReason

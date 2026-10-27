@@ -82,3 +82,102 @@
     animation: none;
   }
 }
+
+/* ---------- Pilihan cara menerima pesanan ---------- */
+.fulfillment {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fulfillment legend {
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-card);
+  border: 2px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-cepat) var(--ease-out),
+    background-color var(--dur-cepat) var(--ease-out),
+    transform var(--dur-cepat) var(--ease-out);
+}
+
+.option:active {
+  transform: scale(0.985);
+}
+
+/* radio asli disembunyikan secara visual tetapi tetap bisa difokus */
+.option input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.option::before {
+  content: "";
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-emas-600);
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-bata-500) 0 45%, transparent 50%) no-repeat center / 0 0;
+  transition: background-size var(--dur-cepat) var(--ease-pegas);
+}
+
+.option.is-selected {
+  background-color: rgba(201, 162, 75, 0.14);
+  border-color: var(--color-emas-500);
+}
+
+.option.is-selected::before {
+  background-size: 100% 100%;
+}
+
+.option:focus-within {
+  outline: 3px solid var(--color-emas-500);
+  outline-offset: 2px;
+}
+
+.option[hidden] {
+  display: none;
+}
+
+.option__body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.option__body small {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.success .pay-info {
+  width: 100%;
+}

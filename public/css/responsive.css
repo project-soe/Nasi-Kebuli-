@@ -269,3 +269,9 @@
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+@media (min-width: 768px) {
+  .option-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

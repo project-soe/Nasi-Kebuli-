@@ -510,3 +510,73 @@
     animation: none;
   }
 }
+
+/* ---------- Cara terima pesanan (admin) ---------- */
+.order-card__fulfil {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.fulfil-pill {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius-pill);
+}
+
+.fulfil-pill--antar {
+  color: var(--color-krem-50);
+  background-color: var(--color-bata-500);
+}
+
+.fulfil-pill--ambil {
+  color: var(--color-cokelat-900);
+  background-color: var(--color-emas-400);
+}
+
+.order-card__address {
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.order-card__map {
+  font-size: var(--fs-sm);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.field__label {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+}
+
+/* ---------- Pembayaran (admin) ---------- */
+.order-card__pay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.fulfil-pill--bayar {
+  color: var(--color-krem-50);
+  background-color: var(--color-cokelat-600);
+}
+
+.pay-pill {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  border-radius: var(--radius-pill);
+}
+
+.pay-pill--lunas {
+  color: var(--color-krem-50);
+  background-color: var(--color-sukses);
+}
+
+.pay-pill--belum {
+  color: var(--color-cokelat-900);
+  background-color: rgba(217, 161, 59, 0.3);
+}

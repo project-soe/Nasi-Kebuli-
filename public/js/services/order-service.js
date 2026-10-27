@@ -6,7 +6,7 @@
 //   orderStatus/{id}  salinan publik tanpa data pribadi - dibaca pelanggan lewat ID
 // Harga/total diperiksa ulang oleh aturan Firestore terhadap data menu.
 
-import { formatRupiah } from '../core/formatters.js';
+import { formatRupiah, paymentLabel } from '../core/formatters.js';
 import { getFirebase } from './api.js';
 
 const SAVE_TIMEOUT_MS = 15000;
@@ -22,7 +22,7 @@ export function normalizePhone(value = '') {
 }
 
 /** @returns {Record<string, string>} pesan error per kolom (kosong = valid) */
-export function validateCheckout({ name = '', phone = '', note = '' }) {
+export function validateCheckout({ name = '', phone = '', note = '', fulfillment = 'ambil', address = '' }) {
   const errors = {};
   const cleanName = name.trim();
 
@@ -34,6 +34,12 @@ export function validateCheckout({ name = '', phone = '', note = '' }) {
   }
 
   if (note.trim().length > 300) errors.note = 'Catatan maksimal 300 huruf.';
+
+  if (fulfillment === 'antar') {
+    const len = address.trim().length;
+    if (len < 10) errors.address = 'Isi alamat lengkap (jalan, nomor, RT/RW, patokan), minimal 10 huruf.';
+    else if (len > 200) errors.address = 'Alamat maksimal 200 huruf.';
+  }
   return errors;
 }
 
@@ -41,12 +47,23 @@ export function validateCheckout({ name = '', phone = '', note = '' }) {
 
 export const orderCode = (id) => String(id).slice(0, 6).toUpperCase();
 
-export function buildWhatsAppMessage({ storeName, code, name, phone, note, items, total }) {
+export function buildWhatsAppMessage({
+  storeName, code, name, phone, note, items, total,
+  fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai',
+}) {
   const lines = [`Halo ${storeName}, saya mau pesan:`, ''];
   items.forEach((item, i) => {
     lines.push(`${i + 1}. ${item.name} x${item.qty} = ${formatRupiah(item.price * item.qty)}`);
   });
+
+  if (fulfillment === 'antar') {
+    lines.push('', `Ongkos kirim: ${deliveryFee > 0 ? formatRupiah(deliveryFee) : 'Gratis'}`);
+  }
   lines.push('', `Total: ${formatRupiah(total)}`, '', `Nama: ${name}`, `No. HP: ${phone}`);
+  lines.push(`Cara terima: ${fulfillment === 'antar' ? 'Diantar' : 'Ambil di tempat'}`);
+  if (fulfillment === 'antar' && address) lines.push(`Alamat: ${address}`);
+  lines.push(`Pembayaran: ${paymentLabel(paymentMethod) || 'Tunai'}`);
+  if (paymentMethod !== 'tunai') lines.push('Bukti pembayaran saya kirim setelah ini.');
   if (note) lines.push(`Catatan: ${note}`);
   lines.push('', `Kode pesanan: ${code}`);
   return lines.join('\n');
@@ -73,7 +90,10 @@ function withTimeout(promise, ms) {
  * Bila gagal, error membawa properti orderId untuk percobaan berikutnya.
  * @returns {Promise<{ id: string }>}
  */
-export async function createOrder({ name, phone, note, items, total }, { orderId } = {}) {
+export async function createOrder(
+  { name, phone, note, items, total, fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai' },
+  { orderId } = {}
+) {
   const { db, fs } = await getFirebase();
   const orderRef = orderId ? fs.doc(db, 'orders', orderId) : fs.doc(fs.collection(db, 'orders'));
   const statusRef = fs.doc(db, 'orderStatus', orderRef.id);
@@ -87,12 +107,17 @@ export async function createOrder({ name, phone, note, items, total }, { orderId
     phone: normalizePhone(phone),
     items: lines,
     total,
+    fulfillment,
+    deliveryFee,
+    paymentMethod,
     status: 'menunggu',
     createdAt,
   };
   if (note && note.trim()) order.note = note.trim();
+  if (fulfillment === 'antar') order.address = address.trim();
 
-  const publicCopy = { items: lines, total, status: 'menunggu', createdAt };
+  // alamat TIDAK ikut ke salinan publik
+  const publicCopy = { items: lines, total, fulfillment, deliveryFee, paymentMethod, status: 'menunggu', createdAt };
 
   try {
     const batch = fs.writeBatch(db);
@@ -125,6 +150,10 @@ function normalizeStatusDoc(id, d = {}) {
         }))
       : [],
     total: Number(d.total) || 0,
+    fulfillment: d.fulfillment === 'antar' ? 'antar' : d.fulfillment === 'ambil' ? 'ambil' : '',
+    deliveryFee: Number(d.deliveryFee) || 0,
+    paymentMethod: ['tunai', 'transfer', 'qris'].includes(d.paymentMethod) ? d.paymentMethod : '',
+    paid: d.paid === true,
     status: String(d.status || 'menunggu'),
     rejectReason: String(d.rejectReason || ''),
     createdAt: toDate(d.createdAt),

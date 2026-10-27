@@ -85,9 +85,41 @@
                 <span class="field__error" role="alert"></span>
               </div>
 
+              <fieldset class="field fulfillment" id="fulfillment-group" data-field="fulfillment">
+                <legend>Cara menerima pesanan</legend>
+                <div class="option-grid">
+                  <label class="option is-selected" id="opt-ambil">
+                    <input type="radio" name="fulfillment" value="ambil" checked>
+                    <span class="option__body">
+                      <strong>Ambil di tempat</strong>
+                      <small id="pickup-hint">Ambil sendiri di toko</small>
+                    </span>
+                  </label>
+                  <label class="option" id="opt-antar">
+                    <input type="radio" name="fulfillment" value="antar">
+                    <span class="option__body">
+                      <strong>Diantar</strong>
+                      <small id="delivery-hint">Diantar ke alamatmu</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="field" data-field="address" id="address-field" hidden>
+                <label for="f-address">Alamat pengantaran</label>
+                <textarea id="f-address" name="address" maxlength="200" rows="3" autocomplete="street-address" placeholder="Jalan, nomor rumah, RT/RW, patokan"></textarea>
+                <span class="field__hint" id="delivery-note"></span>
+                <span class="field__error" role="alert"></span>
+              </div>
+
+              <fieldset class="field fulfillment" id="payment-group" data-field="payment" hidden>
+                <legend>Cara pembayaran</legend>
+                <div class="option-grid" id="payment-options"></div>
+              </fieldset>
+
               <div class="field" data-field="note">
                 <label for="f-note">Catatan (boleh dikosongkan)</label>
-                <textarea id="f-note" name="note" maxlength="300" rows="3" placeholder="Contoh: sambal dipisah, alamat pengantaran, jam ambil"></textarea>
+                <textarea id="f-note" name="note" maxlength="300" rows="3" placeholder="Contoh: sambal dipisah, jam ambil/antar yang diinginkan"></textarea>
                 <span class="field__error" role="alert"></span>
               </div>
 
