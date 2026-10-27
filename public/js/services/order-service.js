@@ -137,6 +137,78 @@ export async function createOrder(
   }
 }
 
+/* ---------- diagnosa: kenapa server menolak? ---------- */
+
+/**
+ * Dijalankan SETELAH server menolak pesanan (permission-denied). Membaca menu dan pengaturan
+ * toko (keduanya publik) lalu mencocokkannya dengan pesanan, meniru pemeriksaan aturan Firestore.
+ * @returns {Promise<string[]>} daftar penyebab dalam bahasa Indonesia (kosong = tidak ketemu)
+ */
+export async function diagnoseDenied({ items, total, fulfillment, deliveryFee, paymentMethod }) {
+  const reasons = [];
+  try {
+    const { db, fs } = await getFirebase();
+
+    if (items.length > MAX_LINES) {
+      reasons.push(`Maksimal ${MAX_LINES} jenis menu per pesanan.`);
+    }
+
+    // ---- pengaturan toko ----
+    const storeSnap = await fs.getDoc(fs.doc(db, 'settings', 'store'));
+    if (!storeSnap.exists()) {
+      if (deliveryFee !== 0 || paymentMethod !== 'tunai') {
+        reasons.push('Pengaturan toko belum tersimpan di database. Buka Admin > Toko, lalu tekan Simpan pengaturan.');
+      }
+    } else {
+      const st = storeSnap.data();
+      if (st.isOpen === false) reasons.push('Toko sedang tutup.');
+      if (fulfillment === 'antar' && st.deliveryEnabled === false) reasons.push('Pengantaran sedang dinonaktifkan penjual.');
+      if (fulfillment === 'ambil' && st.pickupEnabled === false) reasons.push('Ambil di tempat sedang dinonaktifkan penjual.');
+
+      const expectedFee = fulfillment === 'antar' ? st.deliveryFee ?? 0 : 0;
+      if (typeof expectedFee !== 'number') {
+        reasons.push('Ongkos kirim di pengaturan toko tersimpan bukan sebagai angka. Simpan ulang di Admin > Toko.');
+      } else if (deliveryFee !== expectedFee) {
+        reasons.push(`Ongkos kirim sekarang ${formatRupiah(expectedFee)}, bukan ${formatRupiah(deliveryFee)}.`);
+      }
+
+      const methodOk = paymentMethod === 'tunai' ? st.paymentCash !== false
+        : paymentMethod === 'transfer' ? st.paymentTransfer === true
+        : st.paymentQris === true;
+      if (!methodOk) reasons.push(`Pembayaran ${paymentLabel(paymentMethod)} sedang tidak diaktifkan penjual.`);
+    }
+
+    // ---- baris pesanan ----
+    let sum = 0;
+    for (const item of items) {
+      sum += item.price * item.qty;
+      if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > 20) {
+        reasons.push(`Jumlah "${item.name}" harus 1-20.`);
+      }
+      const snap = await fs.getDoc(fs.doc(db, 'menu', item.id));
+      if (!snap.exists()) {
+        reasons.push(`Menu "${item.name}" tidak ada di database (mungkin masih menu contoh). Hapus dari pesanan atau isi menu di Admin.`);
+        continue;
+      }
+      const m = snap.data();
+      if (m.available === false) reasons.push(`Menu "${item.name}" sedang habis.`);
+      if (typeof m.price !== 'number' || !Number.isInteger(m.price)) {
+        reasons.push(`Harga menu "${item.name}" di database bukan bilangan bulat bertipe angka. Ubah lewat Admin > Menu.`);
+      } else if (m.price !== item.price) {
+        reasons.push(`Harga "${item.name}" sekarang ${formatRupiah(m.price)}, bukan ${formatRupiah(item.price)}.`);
+      }
+      if (m.name !== item.name) {
+        reasons.push(`Nama menu "${item.name}" di database berbeda ("${m.name}"). Simpan ulang menu itu di Admin.`);
+      }
+    }
+
+    if (sum + deliveryFee !== total) reasons.push('Total pesanan tidak sama dengan jumlah semua baris.');
+  } catch (error) {
+    reasons.push(`Penyebab tidak bisa diperiksa (${error?.code || error?.message || 'error'}).`);
+  }
+  return reasons;
+}
+
 /* ---------- pantau status satu pesanan (halaman status pelanggan) ---------- */
 
 const toDate = (ts) => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);

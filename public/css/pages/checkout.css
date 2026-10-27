@@ -181,3 +181,25 @@
 .success .pay-info {
   width: 100%;
 }
+
+/* ---------- Pesan gagal kirim (menetap sampai dicoba lagi) ---------- */
+.form-error {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--color-bahaya);
+  background-color: rgba(179, 55, 43, 0.08);
+  border: 1px solid rgba(179, 55, 43, 0.35);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+
+.form-error[hidden] {
+  display: none;
+}
+
+.form-error small {
+  color: var(--text-muted);
+}

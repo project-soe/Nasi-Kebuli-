@@ -6,7 +6,7 @@ import { formatRupiah, paymentLabel } from '../core/formatters.js';
 import { subscribeStore } from '../services/store-service.js';
 import {
   createOrder, validateCheckout, normalizePhone,
-  buildWhatsAppMessage, whatsappUrl, orderCode, MAX_LINES,
+  buildWhatsAppMessage, whatsappUrl, orderCode, MAX_LINES, diagnoseDenied,
 } from '../services/order-service.js';
 import { fetchMenu } from '../services/menu-service.js';
 import { cart } from '../components/cart.js';
@@ -228,6 +228,22 @@ async function syncCartWithMenu() {
 
 const PRICE_CHANGED = 'Menu atau harga baru saja berubah. Pesananmu sudah disesuaikan, silakan periksa lalu kirim lagi.';
 
+/* ---------- pesan gagal (menetap di bawah form) ---------- */
+function showFormError(lines, code = '') {
+  const box = $('checkout-error');
+  if (!lines || lines.length === 0) {
+    box.hidden = true;
+    box.replaceChildren();
+    return;
+  }
+  box.replaceChildren(
+    ...lines.map((text) => h('span', { text })),
+    code ? h('small', { text: `Kode teknis: ${code}` }) : null
+  );
+  box.hidden = false;
+  box.scrollIntoView({ block: 'center', behavior: 'smooth' });
+}
+
 /* ---------- kirim ---------- */
 function errorMessage(error) {
   if (error?.code === 'permission-denied') {
@@ -277,16 +293,16 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
+  showFormError(null);
   state.submitting = true;
   refreshSubmit();
 
+  let orderInput = null;
   try {
     const fee = deliveryFee();
     const grandTotal = total + fee;
-    const { id } = await createOrder(
-      { ...values, items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment },
-      { orderId: state.attemptId }
-    );
+    orderInput = { ...values, items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment };
+    const { id } = await createOrder(orderInput, { orderId: state.attemptId });
 
     writeStorage(CUSTOMER_KEY, JSON.stringify({
       name: values.name.trim(),
@@ -309,9 +325,27 @@ form.addEventListener('submit', async (event) => {
   } catch (error) {
     console.warn('[checkout] gagal menyimpan pesanan:', error);
     state.attemptId = error?.orderId || state.attemptId;
-    // ditolak server: kemungkinan harga/menu berubah. Sinkronkan lalu beri tahu pelanggan.
-    const adjusted = error?.code === 'permission-denied' && (await syncCartWithMenu());
-    showToast(adjusted ? PRICE_CHANGED : errorMessage(error), { type: 'error', duration: 6000 });
+    const denied = error?.code === 'permission-denied';
+
+    // ditolak server: cari tahu penyebabnya dengan mencocokkan pesanan dengan menu & pengaturan toko
+    const reasons = denied && orderInput ? await diagnoseDenied(orderInput) : [];
+    const adjusted = denied && reasons.length > 0 && (await syncCartWithMenu());
+
+    if (reasons.length) {
+      console.warn('[checkout] penyebab ditolak:', reasons);
+      showFormError(
+        [...reasons, ...(adjusted ? ['Pesananmu sudah disesuaikan. Periksa ringkasan, lalu kirim lagi.'] : [])],
+        error.code
+      );
+    } else if (denied) {
+      showFormError(
+        ['Server menolak pesanan padahal menu, harga, dan pengaturan toko sudah cocok. Kemungkinan aturan Firestore belum dipublikasikan ulang atau ada kesalahan di aturan. Hubungi pemilik toko.'],
+        error.code
+      );
+    } else {
+      showFormError([errorMessage(error)], error?.code || error?.message || '');
+    }
+    showToast('Pesanan belum terkirim. Lihat keterangan di bawah form.', { type: 'error', duration: 5000 });
   } finally {
     state.submitting = false;
     refreshSubmit();

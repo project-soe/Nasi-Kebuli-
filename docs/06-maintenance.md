@@ -29,5 +29,9 @@ Kode sudah aman di GitHub.
 ## Jika ada masalah
 - Situs tidak berubah setelah push: cek tab Actions di GitHub, lalu hapus cache browser.
 - Menu contoh muncul terus: Firestore belum berisi menu atau aturan belum dipublikasikan.
-- Pesanan ditolak saat checkout: toko sedang tutup, atau aturan Firestore belum benar.
+- Pesanan ditolak saat checkout: kotak merah di bawah form menyebutkan penyebabnya. Yang sering terjadi:
+  1. Aturan Firestore belum dipublikasikan ulang setelah pembaruan (tempel `firebase/firestore.rules` > Publish).
+  2. Harga menu di Firestore bertipe teks (string), bukan angka. Buat/ubah menu lewat Admin > Menu, jangan manual di Console.
+  3. Pengaturan toko belum pernah disimpan (Admin > Toko > Simpan pengaturan), atau toko sedang ditutup.
+  4. Keranjang masih berisi menu contoh yang tidak ada di database.
 - Login admin gagal di situs publik: domain belum masuk Authorized domains.
