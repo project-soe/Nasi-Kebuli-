@@ -11,17 +11,18 @@
 9. Ulangi dengan pesanan baru, Admin menekan Tolak dengan alasan: pelanggan melihat alasannya.
 10. Admin menutup toko: pelanggan tidak bisa menambah/checkout; Firestore menolak pesanan baru.
 
-## Uji keamanan harga (Firebase Console > Firestore > Rules > Rules Playground)
-Jenis: create, lokasi /orders/tes1, tanpa login. Isi data dengan dokumen pesanan lalu cek hasilnya:
-1. Harga item sama dengan menu, total benar -> DIIZINKAN
-2. Harga item diganti lebih murah dari menu -> DITOLAK
-3. Harga benar tetapi total lebih kecil dari jumlah baris -> DITOLAK
-4. Nama item diganti (id menu murah, nama menu mahal) -> DITOLAK
-5. qty 0, 21, atau pecahan -> DITOLAK
-6. Id menu tidak ada -> DITOLAK
-7. Toko tutup -> DITOLAK
-8. Baca /orders/<id> tanpa login -> DITOLAK; baca /orderStatus/<id> -> DIIZINKAN
-Catatan: Playground memerlukan dokumen orderStatus pasangan; uji lengkap paling mudah lewat checkout asli.
+## Uji keamanan harga
+Catatan: "Rules Playground" di Firebase Console TIDAK bisa menguji pembuatan pesanan, karena aturan
+menuntut `createdAt == request.time` (stempel waktu server) yang tidak bisa ditiru di Playground.
+Uji sebenarnya dilakukan lewat checkout asli atau tes otomatis dengan Firebase Emulator.
+
+Lewat checkout asli, semua harus DITOLAK atau diperbaiki otomatis:
+1. Harga menu diubah admin saat pelanggan di checkout -> ditolak, keranjang disesuaikan, kirim ulang berhasil
+2. Menu ditandai Habis saat pelanggan di checkout -> ditolak, alasan tampil di kotak merah
+3. Toko ditutup saat pelanggan di checkout -> ditolak ("Toko sedang tutup")
+4. Metode bayar dinonaktifkan saat pelanggan memilihnya -> ditolak, pilihan disegarkan
+Pemalsuan langsung ke Firestore (harga murah, total kecil, nama menu tertukar, qty 0/21) hanya bisa
+diuji tuntas dengan Emulator; lihat rencana tes otomatis di docs/04-security.md.
 
 ## Uji perubahan harga saat checkout
 1. Pelanggan menambah menu ke keranjang (jangan checkout dulu).

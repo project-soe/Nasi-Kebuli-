@@ -144,8 +144,22 @@ export async function createOrder(
  * toko (keduanya publik) lalu mencocokkannya dengan pesanan, meniru pemeriksaan aturan Firestore.
  * @returns {Promise<string[]>} daftar penyebab dalam bahasa Indonesia (kosong = tidak ketemu)
  */
-export async function diagnoseDenied({ items, total, fulfillment, deliveryFee, paymentMethod }) {
+export async function diagnoseDenied({
+  items, total, fulfillment, deliveryFee, paymentMethod,
+  name = '', phone = '', note = '', address = '',
+}) {
   const reasons = [];
+
+  // ---- data pemesan (meniru aturan di firestore.rules) ----
+  const cleanName = String(name).trim();
+  if (cleanName.length < 2 || cleanName.length > 60) reasons.push('Nama harus 2-60 huruf.');
+  if (!/^08[1-9][0-9]{6,11}$/.test(normalizePhone(phone))) reasons.push('Format nomor HP tidak diterima server (harus 08xxxxxxxxxx).');
+  if (String(note).trim().length > 300) reasons.push('Catatan lebih dari 300 huruf.');
+  if (fulfillment === 'antar' && (address.trim().length < 10 || address.trim().length > 200)) {
+    reasons.push('Alamat harus 10-200 huruf.');
+  }
+  if (total > 10000000) reasons.push('Total melebihi batas Rp 10.000.000 per pesanan.');
+
   try {
     const { db, fs } = await getFirebase();
 
@@ -182,6 +196,9 @@ export async function diagnoseDenied({ items, total, fulfillment, deliveryFee, p
     let sum = 0;
     for (const item of items) {
       sum += item.price * item.qty;
+      if (!/^[A-Za-z0-9_-]{1,40}$/.test(String(item.id))) {
+        reasons.push(`ID dokumen menu "${item.name}" (${item.id}) berisi karakter yang tidak diizinkan aturan (hanya huruf, angka, _ dan -). Buat ulang menu itu lewat Admin > Menu.`);
+      }
       if (!Number.isInteger(item.qty) || item.qty < 1 || item.qty > 20) {
         reasons.push(`Jumlah "${item.name}" harus 1-20.`);
       }
