@@ -43,7 +43,15 @@ service cloud.firestore {
         : settingsMatch(d, get(/databases/$(database)/documents/settings/store).data);
     }
 
-    // Satu baris pesanan harus cocok dengan dokumen menunya
+    // ---------- validasi baris pesanan ----------
+    // CATATAN ANGGARAN: Firestore membatasi 1.000 ekspresi yang dievaluasi per permintaan dan
+    // 10 pembacaan dokumen. Aturan tidak punya perulangan, jadi tiap baris diperiksa satu per
+    // satu dan setiap pemeriksaan tambahan dikalikan jumlah baris. Karena itu pemeriksaan per
+    // baris sengaja dibuat sehemat mungkin dan jumlah baris dibatasi 5 (selaras MAX_LINES di
+    // public/js/services/order-service.js). Kunci yang wajib ada (id, name, price, qty) otomatis
+    // terperiksa karena diakses; hanya kunci tambahan yang dicegah lewat keys().size() == 4.
+
+    // Harga dan nama harus sama persis dengan dokumen menu, dan menu harus tersedia
     function menuMatches(it) {
       let m = get(/databases/$(database)/documents/menu/$(it.id)).data;
       return it.price == m.price
@@ -52,30 +60,24 @@ service cloud.firestore {
     }
 
     function lineOk(it) {
-      return it is map
-        && it.keys().hasOnly(['id', 'name', 'price', 'qty'])
-        && it.id is string && it.id.matches('^[A-Za-z0-9_-]{1,40}$')
-        && it.name is string
+      return it.keys().size() == 4
         && it.qty is int && it.qty >= 1 && it.qty <= 20
-        && it.price is int && it.price > 0
         && menuMatches(it);
     }
 
-    // Aturan tidak punya perulangan, jadi tiap baris (maks. 6) diperiksa satu per satu.
-    // Batas 6 menjaga jumlah pembacaan dokumen di bawah batas 10 per permintaan.
-    function lineAt(d, i) {
-      return d.items.size() <= i || lineOk(d.items[i]);
+    // n = jumlah baris (dihitung sekali di validOrder)
+    function lineAt(d, n, i) {
+      return n <= i || lineOk(d.items[i]);
     }
 
-    function lineTotal(d, i) {
-      return d.items.size() <= i ? 0 : d.items[i].price * d.items[i].qty;
+    function lineTotal(d, n, i) {
+      return n <= i ? 0 : d.items[i].price * d.items[i].qty;
     }
 
     function validOrder(d) {
+      let n = d.items.size();
       return d.keys().hasOnly(['customerName', 'phone', 'note', 'fulfillment', 'address', 'deliveryFee',
                                'paymentMethod', 'items', 'total', 'status', 'createdAt'])
-        && d.keys().hasAll(['customerName', 'phone', 'fulfillment', 'deliveryFee', 'paymentMethod',
-                            'items', 'total', 'status', 'createdAt'])
         && d.customerName is string && d.customerName.size() >= 2 && d.customerName.size() <= 60
         && d.phone is string && d.phone.matches('^08[1-9][0-9]{6,11}$')
         && (!('note' in d) || (d.note is string && d.note.size() <= 300))
@@ -85,12 +87,11 @@ service cloud.firestore {
               ? ('address' in d && d.address is string && d.address.size() >= 10 && d.address.size() <= 200)
               : !('address' in d))
         && d.deliveryFee is int && d.deliveryFee >= 0 && d.deliveryFee <= 500000
-        && d.items is list && d.items.size() >= 1 && d.items.size() <= 6
-        && lineAt(d, 0) && lineAt(d, 1) && lineAt(d, 2)
-        && lineAt(d, 3) && lineAt(d, 4) && lineAt(d, 5)
+        && d.items is list && n >= 1 && n <= 5
+        && lineAt(d, n, 0) && lineAt(d, n, 1) && lineAt(d, n, 2) && lineAt(d, n, 3) && lineAt(d, n, 4)
         && d.total is int && d.total > 0 && d.total <= 10000000
-        && d.total == lineTotal(d, 0) + lineTotal(d, 1) + lineTotal(d, 2)
-                    + lineTotal(d, 3) + lineTotal(d, 4) + lineTotal(d, 5) + d.deliveryFee
+        && d.total == lineTotal(d, n, 0) + lineTotal(d, n, 1) + lineTotal(d, n, 2)
+                    + lineTotal(d, n, 3) + lineTotal(d, n, 4) + d.deliveryFee
         && d.status == 'menunggu'
         && d.createdAt == request.time;
     }

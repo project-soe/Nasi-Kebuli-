@@ -109,6 +109,25 @@ function setTotal(o, total) {
   o.publicCopy.total = total;
 }
 
+/**
+ * Tes negatif yang bermakna: pesanan dasar TANPA manipulasi harus DITERIMA (kontrol), lalu
+ * versi yang dimanipulasi harus DITOLAK. Dengan begitu penolakan pasti berasal dari
+ * manipulasinya, bukan dari hal lain (mis. batas ekspresi atau kesalahan pada pesanan dasar).
+ */
+async function expectRejected(mutate, orderOpts = {}, placeOpts = {}) {
+  await assertSucceeds(place(customer(), newId(), makeOrder(orderOpts)));
+  const manipulated = makeOrder(orderOpts);
+  mutate(manipulated);
+  await assertFails(place(customer(), newId(), manipulated, placeOpts));
+}
+
+/** Sama, tetapi yang berubah adalah keadaan database (toko tutup, menu habis, dst.) */
+async function expectRejectedAfter(changeState, orderOpts = {}) {
+  await assertSucceeds(place(customer(), newId(), makeOrder(orderOpts)));
+  await changeState();
+  await assertFails(place(customer(), newId(), makeOrder(orderOpts)));
+}
+
 const seedStore = (patch) => env.withSecurityRulesDisabled((ctx) =>
   setDoc(doc(ctx.firestore(), 'settings', 'store'), { ...STORE, ...patch }));
 
@@ -138,14 +157,46 @@ describe('pesanan sah DITERIMA', () => {
     await assertSucceeds(place(customer(), newId(), makeOrder({ paymentMethod: 'qris' })));
   });
 
-  it('6 jenis menu berbeda (batas jumlah pembacaan dokumen)', async () => {
-    const items = ['ayam-1', 'kambing-1', 'paket-1', 'minum-1', 'acar-1', 'sambal-1'].map((id) => line(id, 1));
-    await assertSucceeds(place(customer(), newId(), makeOrder({ items, fulfillment: 'antar', paymentMethod: 'transfer' })));
+  // Jumlah baris 1..5: pastikan batas 1.000 ekspresi / 10 pembacaan dokumen tidak terlewati
+  const DISTINCT = ['ayam-1', 'kambing-1', 'paket-1', 'minum-1', 'acar-1'];
+  for (let n = 1; n <= 5; n += 1) {
+    it(`${n} jenis menu berbeda`, async () => {
+      const items = DISTINCT.slice(0, n).map((id) => line(id, 2));
+      await assertSucceeds(place(customer(), newId(), makeOrder({ items })));
+    });
+  }
+
+  it('KASUS TERBERAT: 5 jenis menu + diantar + transfer + catatan', async () => {
+    const items = DISTINCT.map((id) => line(id, 3));
+    const o = makeOrder({ items, fulfillment: 'antar', paymentMethod: 'transfer' });
+    o.order.note = 'Tolong sambal dipisah dan diantar sebelum jam 12';
+    await assertSucceeds(place(customer(), newId(), o));
   });
 
   it('pengaturan toko belum dibuat: tunai + ambil tetap diterima', async () => {
     await env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), 'settings', 'store')));
     await assertSucceeds(place(customer(), newId(), makeOrder()));
+  });
+});
+
+/* ---------------- batas jumlah baris ---------------- */
+
+describe('batas 5 jenis menu', () => {
+  const SIX = ['ayam-1', 'kambing-1', 'paket-1', 'minum-1', 'acar-1', 'sambal-1'];
+
+  it('5 jenis menu berbeda DITERIMA, tetapi 6 jenis menu berbeda DITOLAK', async () => {
+    await assertSucceeds(place(customer(), newId(), makeOrder({ items: SIX.slice(0, 5).map((id) => line(id, 1)) })));
+    await assertFails(place(customer(), newId(), makeOrder({ items: SIX.map((id) => line(id, 1)) })));
+  });
+
+  it('6 baris yang semuanya sah dan jumlahnya cocok tetap DITOLAK (bukan karena data salah)', async () => {
+    const o = makeOrder({ items: SIX.map((id) => line(id, 1)), fulfillment: 'antar', paymentMethod: 'transfer' });
+    await assertFails(place(customer(), newId(), o));
+  });
+
+  it('7 baris DITOLAK', async () => {
+    const items = [...SIX, 'extra-1'].map((id) => line(id, 1));
+    await assertFails(place(customer(), newId(), makeOrder({ items })));
   });
 });
 
@@ -160,16 +211,14 @@ describe('kecurangan harga/jumlah DITOLAK', () => {
     'total lebih kecil dari jumlah baris': (o) => setTotal(o, 1000),
     'total lebih besar dari jumlah baris': (o) => setTotal(o, o.order.total + 1000),
     'nama menu mahal dipasang di id menu murah': (o) => { o.order.items[0].name = 'Paket Keluarga'; },
+    'nama menu tidak sama dengan database': (o) => { o.order.items[0].name = 'Nasi Kebuli Ayam Spesial'; },
     'jumlah (qty) 21': (o) => { o.order.items[0].qty = 21; setTotal(o, 35000 * 21); },
     'jumlah (qty) pecahan': (o) => { o.order.items[0].qty = 1.5; setTotal(o, 52500); },
+    'jumlah (qty) negatif': (o) => { o.order.items[0].qty = -1; setTotal(o, 35000 * -1); },
     'id menu tidak ada': (o) => { o.order.items[0].id = 'tidak-ada'; },
     'id menu berisi karakter terlarang': (o) => { o.order.items[0].id = 'ayam 1'; },
     'baris berisi field tambahan': (o) => { o.order.items[0].diskon = 100; },
-    'lebih dari 6 baris': (o) => {
-      o.order.items.length = 0;
-      for (let i = 0; i < 7; i += 1) o.order.items.push(line('minum-1', 1));
-      setTotal(o, 5000 * 7);
-    },
+    'baris kekurangan field': (o) => { delete o.order.items[0].name; },
     'total melebihi Rp 10 juta': (o) => {
       o.order.items.length = 0;
       for (let i = 0; i < 4; i += 1) o.order.items.push(line('paket-1', 20));
@@ -178,90 +227,79 @@ describe('kecurangan harga/jumlah DITOLAK', () => {
   };
 
   for (const [name, mutate] of Object.entries(cases)) {
-    it(name, async () => {
-      const o = makeOrder();
-      mutate(o);
-      await assertFails(place(customer(), newId(), o));
-    });
+    it(name, () => expectRejected(mutate));
   }
 
-  it('qty 0 di salah satu baris', async () => {
-    const o = makeOrder({ items: [line('ayam-1', 0), line('kambing-1', 1)] });
-    await assertFails(place(customer(), newId(), o));
-  });
+  it('qty 0 di salah satu baris', () => expectRejected((o) => {
+    o.order.items.length = 0;
+    o.order.items.push(line('ayam-1', 0), line('kambing-1', 1));
+    setTotal(o, 55000);
+  }));
 
-  it('menu sedang habis', async () => {
-    await env.withSecurityRulesDisabled((ctx) =>
-      setDoc(doc(ctx.firestore(), 'menu', 'ayam-1'), { ...MENU['ayam-1'], available: false }));
-    await assertFails(place(customer(), newId(), makeOrder()));
-  });
+  it('menu sedang habis (available: false)', () => expectRejectedAfter(() =>
+    env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'menu', 'ayam-1'), { ...MENU['ayam-1'], available: false }))));
 
-  it('harga menu di database bertipe teks', async () => {
-    await env.withSecurityRulesDisabled((ctx) =>
-      setDoc(doc(ctx.firestore(), 'menu', 'ayam-1'), { ...MENU['ayam-1'], price: '35000' }));
-    await assertFails(place(customer(), newId(), makeOrder()));
-  });
+  it('menu dihapus dari database', () => expectRejectedAfter(() =>
+    env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), 'menu', 'ayam-1')))));
+
+  it('harga menu naik setelah pelanggan menambah ke keranjang', () => expectRejectedAfter(() =>
+    env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'menu', 'ayam-1'), { ...MENU['ayam-1'], price: 40000 }))));
+
+  it('harga menu di database bertipe teks', () => expectRejectedAfter(() =>
+    env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'menu', 'ayam-1'), { ...MENU['ayam-1'], price: '35000' }))));
 });
 
 /* ---------------- pengaturan toko, ongkir, pembayaran ---------------- */
 
 describe('pengaturan toko DITEGAKKAN', () => {
-  it('toko tutup', async () => {
-    await seedStore({ isOpen: false });
-    await assertFails(place(customer(), newId(), makeOrder()));
-  });
+  it('toko tutup', () => expectRejectedAfter(() => seedStore({ isOpen: false })));
 
-  it('ongkir diakali (0) padahal toko menetapkan 5000', async () => {
-    const o = makeOrder({ fulfillment: 'antar' });
+  it('ongkir diakali (0) padahal toko menetapkan 5000', () => expectRejected((o) => {
     o.order.deliveryFee = 0;
     o.publicCopy.deliveryFee = 0;
     setTotal(o, o.order.total - 5000);
-    await assertFails(place(customer(), newId(), o));
-  });
+  }, { fulfillment: 'antar' }));
 
-  it('ongkir dikenakan pada pesanan ambil di tempat', async () => {
-    const o = makeOrder();
+  it('ongkir dikenakan pada pesanan ambil di tempat', () => expectRejected((o) => {
     o.order.deliveryFee = 5000;
     o.publicCopy.deliveryFee = 5000;
     setTotal(o, o.order.total + 5000);
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 
-  it('pengantaran dinonaktifkan', async () => {
-    await seedStore({ deliveryEnabled: false });
-    await assertFails(place(customer(), newId(), makeOrder({ fulfillment: 'antar' })));
-  });
+  it('ongkir berubah di pengaturan setelah pelanggan menghitung', () => expectRejectedAfter(
+    () => seedStore({ deliveryFee: 9000 }), { fulfillment: 'antar' }));
 
-  it('ambil di tempat dinonaktifkan', async () => {
-    await seedStore({ pickupEnabled: false });
-    await assertFails(place(customer(), newId(), makeOrder()));
-  });
+  it('pengantaran dinonaktifkan', () => expectRejectedAfter(
+    () => seedStore({ deliveryEnabled: false }), { fulfillment: 'antar' }));
 
-  it('QRIS dipilih padahal tidak diaktifkan', async () => {
+  it('ambil di tempat dinonaktifkan', () => expectRejectedAfter(() => seedStore({ pickupEnabled: false })));
+
+  it('QRIS dipilih padahal dimatikan', async () => {
+    await seedStore({ paymentQris: true });
+    await assertSucceeds(place(customer(), newId(), makeOrder({ paymentMethod: 'qris' }))); // kontrol
+    await seedStore({ paymentQris: false });
     await assertFails(place(customer(), newId(), makeOrder({ paymentMethod: 'qris' })));
   });
 
-  it('transfer dipilih padahal dimatikan', async () => {
-    await seedStore({ paymentTransfer: false });
-    await assertFails(place(customer(), newId(), makeOrder({ paymentMethod: 'transfer' })));
+  it('transfer dipilih padahal dimatikan', () => expectRejectedAfter(
+    () => seedStore({ paymentTransfer: false }), { paymentMethod: 'transfer' }));
+
+  it('tunai dimatikan', () => expectRejectedAfter(() => seedStore({ paymentCash: false })));
+
+  it('metode bayar tidak dikenal (walau QRIS aktif)', async () => {
+    await seedStore({ paymentQris: true });
+    await expectRejected((o) => {
+      o.order.paymentMethod = 'bitcoin';
+      o.publicCopy.paymentMethod = 'bitcoin';
+    });
   });
 
-  it('tunai dimatikan', async () => {
-    await seedStore({ paymentCash: false });
-    await assertFails(place(customer(), newId(), makeOrder()));
-  });
-
-  it('metode bayar tidak dikenal', async () => {
-    const o = makeOrder();
-    o.order.paymentMethod = 'bitcoin';
-    o.publicCopy.paymentMethod = 'bitcoin';
-    await assertFails(place(customer(), newId(), o));
-  });
-
-  it('pengaturan toko belum dibuat: transfer ditolak', async () => {
-    await env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), 'settings', 'store')));
-    await assertFails(place(customer(), newId(), makeOrder({ paymentMethod: 'transfer' })));
-  });
+  it('pengaturan toko belum dibuat: transfer ditolak', () => expectRejectedAfter(() =>
+    env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), 'settings', 'store'))),
+    { paymentMethod: 'transfer' }));
 });
 
 /* ---------------- bentuk dan isi data pemesan ---------------- */
@@ -270,10 +308,11 @@ describe('data pemesan divalidasi', () => {
   const cases = {
     'nomor HP salah format': (o) => { o.order.phone = '12345678'; },
     'nama terlalu pendek': (o) => { o.order.customerName = 'A'; },
+    'nama terlalu panjang': (o) => { o.order.customerName = 'x'.repeat(61); },
     'catatan lebih dari 300 huruf': (o) => { o.order.note = 'x'.repeat(301); },
     'alamat wajib bila diantar': (o) => { delete o.order.address; },
     'alamat terlalu pendek': (o) => { o.order.address = 'Jl. 1'; },
-    'field tambahan di pesanan': (o) => { o.order.paid = true; },
+    'field tambahan di pesanan (paid)': (o) => { o.order.paid = true; },
     'status awal bukan menunggu': (o) => { o.order.status = 'selesai'; o.publicCopy.status = 'selesai'; },
     'createdAt dari jam perangkat, bukan server': (o) => {
       const now = new Date();
@@ -283,54 +322,44 @@ describe('data pemesan divalidasi', () => {
   };
 
   for (const [name, mutate] of Object.entries(cases)) {
-    it(`${name} DITOLAK`, async () => {
-      const o = makeOrder({ fulfillment: 'antar' });
-      mutate(o);
-      await assertFails(place(customer(), newId(), o));
-    });
+    it(`${name} DITOLAK`, () => expectRejected(mutate, { fulfillment: 'antar' }));
   }
 
-  it('alamat pada pesanan ambil di tempat DITOLAK', async () => {
-    const o = makeOrder();
+  it('alamat pada pesanan ambil di tempat DITOLAK', () => expectRejected((o) => {
     o.order.address = 'Jl. Merdeka No. 10, RT 01';
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 });
 
 /* ---------------- salinan publik orderStatus ---------------- */
 
 describe('salinan publik harus sesuai pesanan', () => {
-  it('tanpa dokumen orderStatus DITOLAK', async () => {
-    await assertFails(place(customer(), newId(), makeOrder(), { skipStatus: true }));
-  });
+  it('tanpa dokumen orderStatus DITOLAK', () => expectRejected(() => {}, {}, { skipStatus: true }));
 
-  it('orderStatus tanpa pesanan DITOLAK', async () => {
-    await assertFails(place(customer(), newId(), makeOrder(), { skipOrder: true }));
-  });
+  it('orderStatus tanpa pesanan DITOLAK', () => expectRejected(() => {}, {}, { skipOrder: true }));
 
-  it('total di salinan publik berbeda DITOLAK', async () => {
-    const o = makeOrder();
+  it('total di salinan publik berbeda DITOLAK', () => expectRejected((o) => {
     o.publicCopy = { ...o.publicCopy, total: 1 };
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 
-  it('isi baris di salinan publik berbeda DITOLAK', async () => {
-    const o = makeOrder();
+  it('isi baris di salinan publik berbeda DITOLAK', () => expectRejected((o) => {
     o.publicCopy = { ...o.publicCopy, items: [line('minum-1', 1)] };
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 
-  it('salinan publik memuat data pribadi DITOLAK', async () => {
-    const o = makeOrder();
+  it('cara terima di salinan publik berbeda DITOLAK', () => expectRejected((o) => {
+    o.publicCopy = { ...o.publicCopy, fulfillment: 'antar' };
+  }));
+
+  it('metode bayar di salinan publik berbeda DITOLAK', () => expectRejected((o) => {
+    o.publicCopy = { ...o.publicCopy, paymentMethod: 'transfer' };
+  }));
+
+  it('salinan publik memuat data pribadi DITOLAK', () => expectRejected((o) => {
     o.publicCopy = { ...o.publicCopy, phone: '081234567890' };
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 
-  it('salinan publik sudah berstatus lunas DITOLAK', async () => {
-    const o = makeOrder();
+  it('salinan publik sudah berstatus lunas DITOLAK', () => expectRejected((o) => {
     o.publicCopy = { ...o.publicCopy, paid: true };
-    await assertFails(place(customer(), newId(), o));
-  });
+  }));
 });
 
 /* ---------------- siapa boleh membaca / mengubah ---------------- */
@@ -387,13 +416,17 @@ describe('hak akses baca dan ubah', () => {
 
   it('admin bisa membaca, melihat daftar, dan mengubah status', async () => {
     await seedOrder();
-    await assertSucceeds(getDoc(doc(admin(), 'orders', id)));
-    await assertSucceeds(getDocs(collection(admin(), 'orders')));
+    const db = admin(); // satu instance Firestore untuk seluruh operasi (referensi tidak boleh dicampur)
+    await assertSucceeds(getDoc(doc(db, 'orders', id)));
+    await assertSucceeds(getDocs(collection(db, 'orders')));
 
-    const batch = writeBatch(admin());
-    batch.update(doc(admin(), 'orders', id), { status: 'diterima', paid: true });
-    batch.set(doc(admin(), 'orderStatus', id), { status: 'diterima', paid: true }, { merge: true });
-    batch.set(doc(collection(doc(admin(), 'orders', id), 'history')), { from: 'menunggu', to: 'diterima', at: serverTimestamp() });
+    // sama seperti updateOrderStatus() di admin: pesanan + salinan publik + riwayat dalam satu batch
+    const batch = writeBatch(db);
+    batch.update(doc(db, 'orders', id), { status: 'diterima', paid: true });
+    batch.set(doc(db, 'orderStatus', id), { status: 'diterima', paid: true }, { merge: true });
+    batch.set(doc(collection(doc(db, 'orders', id), 'history')), {
+      from: 'menunggu', to: 'diterima', at: serverTimestamp(),
+    });
     await assertSucceeds(batch.commit());
   });
 
