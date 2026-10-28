@@ -28,6 +28,12 @@ Jalankan sebelum setiap rilis. Uji di HP (utama), lalu tablet/desktop.
 - [ ] Diantar: alamat wajib, ongkir masuk total; Ambil: tanpa alamat dan ongkir
 - [ ] Alamat tampil di admin dan WhatsApp, TIDAK tampil di halaman status pelanggan
 
+## Jadwal (pre-order)
+- [ ] Pilihan Secepatnya/Jadwalkan hanya muncul bila diaktifkan admin
+- [ ] Daftar tanggal dan jam sesuai lead time, hari ke depan, dan jam awal/akhir
+- [ ] Jadwal tampil di sukses, WhatsApp, admin (filter Terjadwal), dan halaman status
+- [ ] Toko tutup: pesanan terjadwal hanya diterima bila diizinkan pemilik
+
 ## Pembayaran
 - [ ] Metode bayar tampil sesuai pengaturan admin (satu metode saja: pilihan disembunyikan)
 - [ ] Halaman sukses: petunjuk bayar sesuai metode (rekening + salin, QRIS, atau tunai)

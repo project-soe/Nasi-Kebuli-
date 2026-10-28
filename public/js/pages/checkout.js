@@ -13,6 +13,7 @@ import { cart } from '../components/cart.js';
 import { orderLine, summaryRows, restoreFocus } from '../components/order-summary.js';
 import { showToast } from '../components/toast.js';
 import { createPaymentInfo } from '../components/payment-info.js';
+import { listDates, listSlots, fromYmdHm, isValidSchedule, formatSchedule } from '../core/schedule.js';
 
 const CUSTOMER_KEY = 'kebuli.customer.v1';
 const LAST_ORDER_KEY = 'kebuli.lastOrderId';
@@ -119,6 +120,7 @@ function syncFulfillmentUI() {
   $('opt-antar').classList.toggle('is-selected', antar);
   $('address-field').hidden = !antar;
   $('delivery-note').textContent = state.store.deliveryNote || '';
+  $('schedule-legend').textContent = antar ? 'Kapan pesanan diantar?' : 'Kapan pesanan diambil?';
   renderSummary(cart.getState());
 }
 
@@ -141,6 +143,64 @@ function applyFulfillmentOptions() {
   if (choice === 'antar' && !deliveryOk) choice = 'ambil';
   if (choice === 'ambil' && !pickupOk && deliveryOk) choice = 'antar';
   setFulfillment(choice);
+}
+
+/* ---------- jadwal (pre-order): secepatnya / jadwalkan ---------- */
+const whenInputs = () => [...form.querySelectorAll('input[name="when"]')];
+const currentWhen = () => (form.elements.when.value === 'later' ? 'later' : 'asap');
+
+/** Pelanggan boleh menjadwalkan bila pre-order aktif, dan (saat toko tutup) pemilik mengizinkan */
+const canSchedule = () => state.store.preorderEnabled === true
+  && (!isClosed() || state.store.preorderWhenClosed === true);
+
+function populateTimes() {
+  const dateSelect = form.elements.scheduleDate;
+  const timeSelect = form.elements.scheduleTime;
+  const previous = timeSelect.value;
+  const slots = dateSelect.value ? listSlots(state.store, dateSelect.value) : [];
+  timeSelect.replaceChildren(...slots.map((slot) => h('option', { value: slot.value, text: slot.label })));
+  if (slots.some((slot) => slot.value === previous)) timeSelect.value = previous;
+}
+
+function populateSchedule() {
+  const dateSelect = form.elements.scheduleDate;
+  const previous = dateSelect.value;
+  const dates = listDates(state.store);
+  dateSelect.replaceChildren(...dates.map((d) => h('option', { value: d.value, text: d.label })));
+  if (dates.some((d) => d.value === previous)) dateSelect.value = previous;
+  populateTimes();
+  $('schedule-empty').hidden = dates.length > 0;
+}
+
+function setWhen(value) {
+  whenInputs().forEach((input) => { input.checked = input.value === value; });
+  syncWhenUI();
+}
+
+function syncWhenUI() {
+  const later = currentWhen() === 'later';
+  $('opt-asap').classList.toggle('is-selected', !later);
+  $('opt-later').classList.toggle('is-selected', later);
+  $('schedule-fields').hidden = !later;
+  if (later) populateSchedule();
+  const antar = currentFulfillment() === 'antar';
+  $('schedule-legend').textContent = antar ? 'Kapan pesanan diantar?' : 'Kapan pesanan diambil?';
+  const s = state.store;
+  $('schedule-note').textContent = later
+    ? `Pesan minimal ${s.minLeadHours} jam sebelumnya, jam ${String(s.slotStart).replace(':', '.')}-${String(s.slotEnd).replace(':', '.')}.`
+    : '';
+  refreshSubmit();
+}
+
+/** Tampilkan pilihan jadwal sesuai pengaturan toko */
+function applyScheduleOptions() {
+  const show = canSchedule();
+  $('schedule-group').hidden = !show;
+  $('opt-asap').hidden = isClosed();   // toko tutup: hanya bisa dijadwalkan
+  let choice = currentWhen();
+  if (!show) choice = 'asap';
+  else if (isClosed()) choice = 'later';
+  setWhen(choice);
 }
 
 /* ---------- tampilan ---------- */
@@ -170,10 +230,15 @@ function renderSummary({ items, count, total }) {
 function refreshSubmit() {
   const closed = isClosed();
   const waiting = !state.storeLoaded;
-  submitBtn.disabled = closed || waiting || state.submitting;
+  // toko tutup: hanya pesanan terjadwal yang boleh dikirim (bila diizinkan pemilik)
+  const blocked = closed && !(canSchedule() && currentWhen() === 'later');
+  submitBtn.disabled = blocked || waiting || state.submitting;
   submitBtn.classList.toggle('is-loading', state.submitting);
   if (!state.submitting) {
-    submitBtn.textContent = closed ? 'Toko sedang tutup' : waiting ? 'Memuat\u2026' : 'Kirim Pesanan';
+    submitBtn.textContent = blocked ? 'Toko sedang tutup'
+      : waiting ? 'Memuat\u2026'
+      : closed ? 'Kirim Pesanan Terjadwal'
+      : 'Kirim Pesanan';
   }
 }
 
@@ -197,12 +262,17 @@ function readForm() {
     fulfillment: currentFulfillment(),
     address: form.elements.address.value,
     payment: currentPayment(),
+    when: currentWhen(),
+    scheduleDate: form.elements.scheduleDate.value,
+    scheduleTime: form.elements.scheduleTime.value,
   };
 }
 
 form.addEventListener('change', (event) => {
   if (event.target.name === 'fulfillment') syncFulfillmentUI();
   if (event.target.name === 'payment') syncPaymentUI();
+  if (event.target.name === 'when') syncWhenUI();
+  if (event.target.name === 'scheduleDate') populateTimes();
 });
 
 form.addEventListener('input', (event) => {
@@ -259,11 +329,6 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (state.submitting || state.done) return;
 
-  if (isClosed()) {
-    showToast('Toko sedang tutup', { type: 'error' });
-    return;
-  }
-
   const { items, total, count } = cart.getState();
   if (count === 0) return;
 
@@ -273,6 +338,11 @@ form.addEventListener('submit', async (event) => {
   }
 
   const values = readForm();
+
+  if (isClosed() && !(canSchedule() && values.when === 'later')) {
+    showToast('Toko sedang tutup', { type: 'error' });
+    return;
+  }
 
   if (values.fulfillment === 'antar' && state.store.deliveryEnabled === false) {
     showToast('Pengantaran sedang tidak tersedia. Pilih ambil di tempat.', { type: 'error' });
@@ -286,6 +356,18 @@ form.addEventListener('submit', async (event) => {
   }
 
   const errors = validateCheckout(values);
+
+  let scheduledFor = null;
+  if (values.when === 'later') {
+    if (!values.scheduleDate) errors.scheduleDate = 'Pilih tanggal.';
+    else if (!values.scheduleTime) errors.scheduleTime = 'Pilih jam.';
+    else {
+      scheduledFor = fromYmdHm(values.scheduleDate, values.scheduleTime);
+      if (!isValidSchedule(state.store, scheduledFor)) {
+        errors.scheduleTime = 'Jadwal ini sudah tidak tersedia. Pilih jam lain.';
+      }
+    }
+  }
   showErrors(errors);
   const firstError = Object.keys(errors)[0];
   if (firstError) {
@@ -301,7 +383,7 @@ form.addEventListener('submit', async (event) => {
   try {
     const fee = deliveryFee();
     const grandTotal = total + fee;
-    orderInput = { ...values, items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment };
+    orderInput = { ...values, items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment, scheduledFor };
     const { id } = await createOrder(orderInput, { orderId: state.attemptId });
 
     writeStorage(CUSTOMER_KEY, JSON.stringify({
@@ -319,7 +401,7 @@ form.addEventListener('submit', async (event) => {
       id, ...values,
       name: values.name.trim(), phone: normalizePhone(values.phone),
       note: values.note.trim(), address: values.address.trim(),
-      items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment,
+      items, total: grandTotal, deliveryFee: fee, paymentMethod: values.payment, scheduledFor,
     });
     cart.clear();
   } catch (error) {
@@ -362,6 +444,7 @@ function showSuccess(order) {
     h('div', { class: 'success__icon' }, icon('i-check', '')),
     h('h2', { text: 'Pesanan tersimpan!' }),
     h('p', { class: 'success__code', text: `Kode pesanan: ${code}` }),
+    order.scheduledFor ? h('p', { text: `Jadwal: ${formatSchedule(order.scheduledFor)}` }) : null,
     h('p', { text: order.fulfillment === 'antar'
       ? 'Pesananmu akan diantar. Satu langkah lagi: kirim pesananmu ke WhatsApp penjual agar segera diproses.'
       : 'Pesananmu bisa diambil di toko. Satu langkah lagi: kirim pesananmu ke WhatsApp penjual agar segera diproses.' }),
@@ -400,13 +483,26 @@ syncCartWithMenu().then((adjusted) => { if (adjusted) showToast(PRICE_CHANGED, {
 subscribeStore((store) => {
   state.store = store;
   state.storeLoaded = true;
-  applyFulfillmentOptions();
-  applyPaymentOptions();
-  applyStoreInfo(store);
-  applyWhatsAppLinks(store);
-  applyStoreStatus(store);
-  banner.hidden = !isClosed();
-  bannerText.textContent = store.closedMessage;
+
+  // Tiap langkah dijaga sendiri-sendiri: bila satu gagal (mis. berkas HTML belum diperbarui),
+  // langkah lain dan tombol kirim tetap jalan, dan penyebabnya tercatat di console.
+  const steps = [
+    applyFulfillmentOptions,
+    applyPaymentOptions,
+    applyScheduleOptions,
+    () => applyStoreInfo(store),
+    () => applyWhatsAppLinks(store),
+    () => applyStoreStatus(store),
+    () => {
+      banner.hidden = !isClosed();
+      bannerText.textContent = canSchedule()
+        ? `${store.closedMessage} Kamu masih bisa menjadwalkan pesanan di bawah.`
+        : store.closedMessage;
+    },
+  ];
+  for (const step of steps) {
+    try { step(); } catch (error) { console.warn('[checkout] langkah tampilan gagal:', error); }
+  }
   refreshSubmit();
 });
 

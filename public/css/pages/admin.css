@@ -580,3 +580,19 @@
   color: var(--color-cokelat-900);
   background-color: rgba(217, 161, 59, 0.3);
 }
+
+/* ---------- Pesanan terjadwal (admin) ---------- */
+.order-card__schedule {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background-color: rgba(201, 162, 75, 0.18);
+  border-radius: var(--radius-sm);
+}
+
+.fulfil-pill--jadwal {
+  color: var(--color-krem-50);
+  background-color: var(--color-emas-600);
+}

@@ -69,7 +69,9 @@ function line(menuId, qty = 1) {
 }
 
 /** Pesanan sah (dan salinan publiknya). Ubah isinya di tiap tes untuk menguji penolakan. */
-function makeOrder({ items = [line('ayam-1', 2)], fulfillment = 'ambil', paymentMethod = 'tunai' } = {}) {
+function makeOrder({
+  items = [line('ayam-1', 2)], fulfillment = 'ambil', paymentMethod = 'tunai', scheduledFor = null,
+} = {}) {
   const deliveryFee = fulfillment === 'antar' ? STORE.deliveryFee : 0;
   const subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
   const createdAt = serverTimestamp();
@@ -83,14 +85,20 @@ function makeOrder({ items = [line('ayam-1', 2)], fulfillment = 'ambil', payment
     fulfillment,
     deliveryFee,
     paymentMethod,
+    scheduledFor,
     status: 'menunggu',
     createdAt,
   };
   if (fulfillment === 'antar') order.address = 'Jl. Merdeka No. 10, RT 01';
 
-  const publicCopy = { items, total, fulfillment, deliveryFee, paymentMethod, status: 'menunggu', createdAt };
+  const publicCopy = {
+    items, total, fulfillment, deliveryFee, paymentMethod, scheduledFor, status: 'menunggu', createdAt,
+  };
   return { order, publicCopy };
 }
+
+/** Waktu mendatang (jam dari sekarang) untuk pesanan terjadwal */
+const inHours = (h) => new Date(Date.now() + h * 3600 * 1000);
 
 let counter = 0;
 const newId = () => `pesanan${++counter}abcdefghij`;
@@ -169,6 +177,14 @@ describe('pesanan sah DITERIMA', () => {
   it('KASUS TERBERAT: 5 jenis menu + diantar + transfer + catatan', async () => {
     const items = DISTINCT.map((id) => line(id, 3));
     const o = makeOrder({ items, fulfillment: 'antar', paymentMethod: 'transfer' });
+    o.order.note = 'Tolong sambal dipisah dan diantar sebelum jam 12';
+    await assertSucceeds(place(customer(), newId(), o));
+  });
+
+  it('KASUS TERBERAT + TERJADWAL: 5 jenis menu + diantar + transfer + catatan + jadwal', async () => {
+    const items = DISTINCT.map((id) => line(id, 3));
+    const when = inHours(30);
+    const o = makeOrder({ items, fulfillment: 'antar', paymentMethod: 'transfer', scheduledFor: when });
     o.order.note = 'Tolong sambal dipisah dan diantar sebelum jam 12';
     await assertSucceeds(place(customer(), newId(), o));
   });
@@ -300,6 +316,48 @@ describe('pengaturan toko DITEGAKKAN', () => {
   it('pengaturan toko belum dibuat: transfer ditolak', () => expectRejectedAfter(() =>
     env.withSecurityRulesDisabled((ctx) => deleteDoc(doc(ctx.firestore(), 'settings', 'store'))),
     { paymentMethod: 'transfer' }));
+});
+
+/* ---------------- jadwal ambil/antar (pre-order) ---------------- */
+
+describe('jadwal pre-order', () => {
+  it('pesanan terjadwal 1 hari lagi DITERIMA', async () => {
+    await assertSucceeds(place(customer(), newId(), makeOrder({ scheduledFor: inHours(24) })));
+  });
+
+  it('jadwal di masa lalu DITOLAK', () => expectRejected((o) => {
+    const past = inHours(-2);
+    o.order.scheduledFor = past;
+    o.publicCopy.scheduledFor = past;
+  }));
+
+  it('jadwal lebih dari 60 hari DITOLAK', () => expectRejected((o) => {
+    const far = inHours(24 * 61);
+    o.order.scheduledFor = far;
+    o.publicCopy.scheduledFor = far;
+  }));
+
+  it('jadwal bukan stempel waktu (teks) DITOLAK', () => expectRejected((o) => {
+    o.order.scheduledFor = '2030-01-01';
+    o.publicCopy.scheduledFor = '2030-01-01';
+  }));
+
+  it('jadwal di salinan publik berbeda dari pesanan DITOLAK', () => expectRejected((o) => {
+    o.publicCopy.scheduledFor = inHours(48);
+  }, { scheduledFor: inHours(24) }));
+
+  it('toko tutup + pesanan terjadwal DITERIMA bila pemilik mengizinkan pre-order saat tutup', async () => {
+    await seedStore({ isOpen: false, preorderWhenClosed: true });
+    await assertSucceeds(place(customer(), newId(), makeOrder({ scheduledFor: inHours(24) })));
+  });
+
+  it('toko tutup + pesanan terjadwal DITOLAK bila pemilik tidak mengizinkan', () => expectRejectedAfter(
+    () => seedStore({ isOpen: false, preorderWhenClosed: false }), { scheduledFor: inHours(24) }));
+
+  it('toko tutup + pesanan secepatnya tetap DITOLAK walau pre-order saat tutup diizinkan', async () => {
+    await seedStore({ isOpen: false, preorderWhenClosed: true });
+    await assertFails(place(customer(), newId(), makeOrder()));
+  });
 });
 
 /* ---------------- bentuk dan isi data pemesan ---------------- */

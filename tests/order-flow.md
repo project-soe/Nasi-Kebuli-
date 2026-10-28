@@ -53,3 +53,14 @@ diuji tuntas dengan Emulator; lihat rencana tes otomatis di docs/04-security.md.
 8. Halaman status pelanggan: petunjuk bayar berganti menjadi "Pembayaran sudah diterima" setelah ditandai lunas.
 9. Nonaktifkan Transfer di admin saat pelanggan sedang di checkout: pelanggan yang masih memilih Transfer
    ditolak server; pilihan otomatis disegarkan.
+
+## Uji jadwal (pre-order)
+1. Admin > Toko: centang "Pelanggan boleh memilih tanggal dan jam", isi lead time (mis. 2), sampai (mis. 14 hari),
+   jam awal 10:00 dan akhir 20:00; Simpan.
+2. Checkout: muncul pilihan "Secepatnya" / "Jadwalkan". Pilih Jadwalkan: muncul tanggal dan jam.
+   Jam hari ini yang kurang dari lead time tidak tampil; jam di luar 10.00-20.00 tidak tampil.
+3. Kirim pesanan terjadwal: halaman sukses dan pesan WhatsApp memuat "Jadwal: ...".
+4. Admin > Pesanan: kartu menampilkan "Dijadwalkan" + waktu; filter "Terjadwal" menampilkan urut jadwal terdekat.
+5. Halaman status pelanggan menampilkan jadwal.
+6. Tutup toko + centang "Boleh dijadwalkan walau toko sedang tutup": checkout hanya menawarkan "Jadwalkan"
+   dan pesanan terjadwal diterima. Tanpa centang itu: checkout menyatakan toko tutup.

@@ -1,12 +1,18 @@
 // components/admin-orders.js - daftar pesanan masuk (langsung/real-time) untuk admin
 import { h, icon } from '../core/dom.js';
 import { formatRupiah, statusLabel, timeAgo, paymentLabel } from '../core/formatters.js';
+import { formatSchedule } from '../core/schedule.js';
 import { subscribeOrders, updateOrderStatus, setOrderPaid } from '../services/admin-service.js';
 import { orderCode, whatsappUrl } from '../services/order-service.js';
 import { openModal } from './modal.js';
 import { showToast } from './toast.js';
 
-const FILTERS = ['menunggu', 'diterima', 'diproses', 'selesai', 'ditolak', 'semua'];
+const FILTERS = ['menunggu', 'terjadwal', 'diterima', 'diproses', 'selesai', 'ditolak', 'semua'];
+
+/** Pesanan terjadwal yang masih aktif (belum selesai/ditolak) */
+const isUpcoming = (o) => Boolean(o.scheduledFor) && ['menunggu', 'diterima', 'diproses'].includes(o.status);
+
+const filterLabel = (key) => (key === 'semua' ? 'Semua' : key === 'terjadwal' ? 'Terjadwal' : statusLabel(key));
 
 // langkah berikutnya untuk tiap status
 const NEXT = {
@@ -44,7 +50,7 @@ function chatMessage(order, storeName) {
   const antar = order.fulfillment === 'antar';
   switch (order.status) {
     case 'diterima':
-      return `Halo ${name}, pesanan ${code} sudah kami terima dengan total ${formatRupiah(order.total)}${antar ? ' (sudah termasuk ongkos kirim)' : ''}. Terima kasih sudah memesan di ${storeName}!`;
+      return `Halo ${name}, pesanan ${code} sudah kami terima dengan total ${formatRupiah(order.total)}${antar ? ' (sudah termasuk ongkos kirim)' : ''}${order.scheduledFor ? `, dijadwalkan ${formatSchedule(order.scheduledFor)}` : ''}. Terima kasih sudah memesan di ${storeName}!`;
     case 'diproses':
       return antar
         ? `Halo ${name}, pesanan ${code} sedang kami siapkan dan akan segera diantar. Mohon ditunggu ya.`
@@ -58,6 +64,14 @@ function chatMessage(order, storeName) {
     default:
       return `Halo ${name}, kami dari ${storeName}. Terkait pesanan ${code}: `;
   }
+}
+
+/** Jadwal ambil/antar untuk pesanan pre-order */
+function scheduleBlock(order) {
+  if (!order.scheduledFor) return null;
+  return h('div', { class: 'order-card__schedule' },
+    h('span', { class: 'fulfil-pill fulfil-pill--jadwal', text: 'Dijadwalkan' }),
+    h('strong', { text: formatSchedule(order.scheduledFor) }));
 }
 
 /** Cara terima (diantar / ambil) + alamat dan tautan peta */
@@ -178,6 +192,7 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
           }, icon('i-wa'), 'Chat'))),
 
       fulfillmentBlock(order),
+      scheduleBlock(order),
       paymentBlock(order),
 
       h('ul', { class: 'order-card__items' },
@@ -206,6 +221,7 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
     const result = { semua: state.orders.length };
     FILTERS.forEach((f) => { if (f !== 'semua') result[f] = 0; });
     state.orders.forEach((o) => { if (o.status in result) result[o.status] += 1; });
+    result.terjadwal = state.orders.filter(isUpcoming).length;
     return result;
   }
 
@@ -217,7 +233,7 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
           class: `chip${key === state.filter ? ' is-active' : ''}`,
           type: 'button',
           'aria-pressed': String(key === state.filter),
-          text: `${key === 'semua' ? 'Semua' : statusLabel(key)} (${c[key] ?? 0})`,
+          text: `${filterLabel(key)} (${c[key] ?? 0})`,
           onClick: () => { state.filter = key; render(); },
         }))
     );
@@ -236,14 +252,17 @@ export function initOrders({ filterBar, list, adminEmail, getStoreName, onPendin
       return;
     }
 
-    const shown = state.filter === 'semua'
-      ? state.orders
-      : state.orders.filter((o) => o.status === state.filter);
+    let shown;
+    if (state.filter === 'semua') shown = state.orders;
+    else if (state.filter === 'terjadwal') {
+      // paling dekat jadwalnya tampil paling atas
+      shown = state.orders.filter(isUpcoming).sort((a, b) => a.scheduledFor - b.scheduledFor);
+    } else shown = state.orders.filter((o) => o.status === state.filter);
 
     if (shown.length === 0) {
       list.replaceChildren(h('div', { class: 'empty-state' },
         icon('i-list', 'empty-state__icon'),
-        h('p', { text: state.filter === 'semua' ? 'Belum ada pesanan masuk.' : `Tidak ada pesanan berstatus ${statusLabel(state.filter).toLowerCase()}.` })));
+        h('p', { text: state.filter === 'semua' ? 'Belum ada pesanan masuk.' : state.filter === 'terjadwal' ? 'Tidak ada pesanan terjadwal yang aktif.' : `Tidak ada pesanan berstatus ${statusLabel(state.filter).toLowerCase()}.` })));
       return;
     }
     list.replaceChildren(...shown.map(orderCard));

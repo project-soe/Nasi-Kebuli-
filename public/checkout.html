@@ -117,6 +117,43 @@
                 <div class="option-grid" id="payment-options"></div>
               </fieldset>
 
+              <fieldset class="field fulfillment" id="schedule-group" data-field="schedule" hidden>
+                <legend id="schedule-legend">Kapan pesanan dibutuhkan?</legend>
+                <div class="option-grid">
+                  <label class="option is-selected" id="opt-asap">
+                    <input type="radio" name="when" value="asap" checked>
+                    <span class="option__body">
+                      <strong>Secepatnya</strong>
+                      <small>Diproses setelah penjual mengonfirmasi</small>
+                    </span>
+                  </label>
+                  <label class="option" id="opt-later">
+                    <input type="radio" name="when" value="later">
+                    <span class="option__body">
+                      <strong>Jadwalkan</strong>
+                      <small>Pilih tanggal dan jam</small>
+                    </span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div id="schedule-fields" hidden>
+                <div class="field-row">
+                  <div class="field" data-field="scheduleDate">
+                    <label for="f-date">Tanggal</label>
+                    <select id="f-date" name="scheduleDate"></select>
+                    <span class="field__error" role="alert"></span>
+                  </div>
+                  <div class="field" data-field="scheduleTime">
+                    <label for="f-time">Jam</label>
+                    <select id="f-time" name="scheduleTime"></select>
+                    <span class="field__error" role="alert"></span>
+                  </div>
+                </div>
+                <p class="field__hint" id="schedule-empty" hidden>Belum ada jadwal yang tersedia. Coba lagi nanti atau hubungi penjual.</p>
+                <p class="field__hint" id="schedule-note"></p>
+              </div>
+
               <div class="field" data-field="note">
                 <label for="f-note">Catatan (boleh dikosongkan)</label>
                 <textarea id="f-note" name="note" maxlength="300" rows="3" placeholder="Contoh: sambal dipisah, jam ambil/antar yang diinginkan"></textarea>

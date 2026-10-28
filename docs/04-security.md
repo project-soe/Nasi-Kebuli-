@@ -14,8 +14,9 @@ Saat pesanan dibuat, aturan Firestore memeriksa SETIAP baris terhadap dokumen me
 - `paymentMethod` hanya `tunai`/`transfer`/`qris` dan harus aktif di pengaturan toko
 - `paid` (lunas) tidak bisa diisi pelanggan; hanya admin yang dapat mengubahnya
 - Sistem TIDAK memverifikasi pembayaran otomatis: pemilik mencocokkan bukti transfer/QRIS secara manual lalu menekan "Tandai lunas"
-- maksimal 6 jenis menu per pesanan (aturan tidak punya perulangan; batas ini juga menjaga
-  jumlah pembacaan dokumen di bawah batas 10 per permintaan)
+- maksimal 5 jenis menu per pesanan. Aturan tidak punya perulangan, dan Firestore membatasi
+  1.000 ekspresi per permintaan serta 10 pembacaan dokumen; pemeriksaan tiap baris dikalikan jumlah baris,
+  sehingga 6 baris dilaporkan melampaui batas ekspresi saat diuji
 - toko harus buka; nomor HP berformat 08xxxxxxxxxx
 
 Bila harga menu berubah saat pelanggan sedang checkout, server menolak; halaman checkout
@@ -39,7 +40,7 @@ yang tidak membawa bukti berasal dari situs asli (reCAPTCHA v3). Gratis, tanpa C
 
 ### Mengaktifkan App Check (urutan penting)
 1. Buka https://www.google.com/recaptcha/admin/create > jenis **reCAPTCHA v3**.
-   Domain: `project-soe.github.io` dan `localhost`. Simpan **Site key** dan **Secret key**.
+   Domain: `studio-2645889636-44b24.web.app`, `studio-2645889636-44b24.firebaseapp.com`, dan `localhost`. Simpan **Site key** dan **Secret key**.
 2. Firebase Console > **App Check** > tab Apps > pilih aplikasi web > reCAPTCHA > tempel
    **Secret key** > Save. (Secret key HANYA di Console, jangan di kode.)
 3. Isi **Site key** di `public/js/core/firebase-config.js` pada `appCheckConfig.siteKey`.

@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "check:js": "node scripts/check-syntax.mjs",
-    "test:rules": "firebase emulators:exec --config firebase.test.json --only firestore --project demo-kebuli \"node --test tests/rules/\""
+    "test:rules": "firebase emulators:exec --config firebase.test.json --only firestore --project demo-kebuli \"node --test --test-reporter=spec tests/rules/firestore.rules.test.mjs\""
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.4",

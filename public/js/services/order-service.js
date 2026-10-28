@@ -7,12 +7,13 @@
 // Harga/total diperiksa ulang oleh aturan Firestore terhadap data menu.
 
 import { formatRupiah, paymentLabel } from '../core/formatters.js';
+import { formatSchedule } from '../core/schedule.js';
 import { getFirebase } from './api.js';
 
 const SAVE_TIMEOUT_MS = 15000;
 
 /** Batas jenis menu berbeda per pesanan (selaras dengan firebase/firestore.rules) */
-export const MAX_LINES = 6;
+export const MAX_LINES = 5;
 
 /* ---------- validasi ---------- */
 
@@ -49,7 +50,7 @@ export const orderCode = (id) => String(id).slice(0, 6).toUpperCase();
 
 export function buildWhatsAppMessage({
   storeName, code, name, phone, note, items, total,
-  fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai',
+  fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai', scheduledFor = null,
 }) {
   const lines = [`Halo ${storeName}, saya mau pesan:`, ''];
   items.forEach((item, i) => {
@@ -61,6 +62,7 @@ export function buildWhatsAppMessage({
   }
   lines.push('', `Total: ${formatRupiah(total)}`, '', `Nama: ${name}`, `No. HP: ${phone}`);
   lines.push(`Cara terima: ${fulfillment === 'antar' ? 'Diantar' : 'Ambil di tempat'}`);
+  lines.push(`Jadwal: ${scheduledFor ? formatSchedule(scheduledFor) : 'Secepatnya'}`);
   if (fulfillment === 'antar' && address) lines.push(`Alamat: ${address}`);
   lines.push(`Pembayaran: ${paymentLabel(paymentMethod) || 'Tunai'}`);
   if (paymentMethod !== 'tunai') lines.push('Bukti pembayaran saya kirim setelah ini.');
@@ -91,7 +93,7 @@ function withTimeout(promise, ms) {
  * @returns {Promise<{ id: string }>}
  */
 export async function createOrder(
-  { name, phone, note, items, total, fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai' },
+  { name, phone, note, items, total, fulfillment = 'ambil', address = '', deliveryFee = 0, paymentMethod = 'tunai', scheduledFor = null },
   { orderId } = {}
 ) {
   const { db, fs } = await getFirebase();
@@ -110,6 +112,7 @@ export async function createOrder(
     fulfillment,
     deliveryFee,
     paymentMethod,
+    scheduledFor: scheduledFor || null,
     status: 'menunggu',
     createdAt,
   };
@@ -117,7 +120,10 @@ export async function createOrder(
   if (fulfillment === 'antar') order.address = address.trim();
 
   // alamat TIDAK ikut ke salinan publik
-  const publicCopy = { items: lines, total, fulfillment, deliveryFee, paymentMethod, status: 'menunggu', createdAt };
+  const publicCopy = {
+    items: lines, total, fulfillment, deliveryFee, paymentMethod,
+    scheduledFor: scheduledFor || null, status: 'menunggu', createdAt,
+  };
 
   try {
     const batch = fs.writeBatch(db);
@@ -146,7 +152,7 @@ export async function createOrder(
  */
 export async function diagnoseDenied({
   items, total, fulfillment, deliveryFee, paymentMethod,
-  name = '', phone = '', note = '', address = '',
+  name = '', phone = '', note = '', address = '', scheduledFor = null,
 }) {
   const reasons = [];
 
@@ -159,6 +165,10 @@ export async function diagnoseDenied({
     reasons.push('Alamat harus 10-200 huruf.');
   }
   if (total > 10000000) reasons.push('Total melebihi batas Rp 10.000.000 per pesanan.');
+  if (scheduledFor) {
+    if (scheduledFor.getTime() <= Date.now()) reasons.push('Jadwal yang dipilih sudah lewat. Pilih jam yang lebih akhir.');
+    if (scheduledFor.getTime() > Date.now() + 60 * 24 * 3600 * 1000) reasons.push('Jadwal terlalu jauh (maksimal 60 hari).');
+  }
 
   try {
     const { db, fs } = await getFirebase();
@@ -175,7 +185,9 @@ export async function diagnoseDenied({
       }
     } else {
       const st = storeSnap.data();
-      if (st.isOpen === false) reasons.push('Toko sedang tutup.');
+      if (st.isOpen === false && !(scheduledFor && st.preorderWhenClosed === true)) {
+        reasons.push(scheduledFor ? 'Toko sedang tutup dan tidak menerima pesanan terjadwal saat tutup.' : 'Toko sedang tutup.');
+      }
       if (fulfillment === 'antar' && st.deliveryEnabled === false) reasons.push('Pengantaran sedang dinonaktifkan penjual.');
       if (fulfillment === 'ambil' && st.pickupEnabled === false) reasons.push('Ambil di tempat sedang dinonaktifkan penjual.');
 
@@ -243,6 +255,7 @@ function normalizeStatusDoc(id, d = {}) {
     deliveryFee: Number(d.deliveryFee) || 0,
     paymentMethod: ['tunai', 'transfer', 'qris'].includes(d.paymentMethod) ? d.paymentMethod : '',
     paid: d.paid === true,
+    scheduledFor: toDate(d.scheduledFor),
     status: String(d.status || 'menunggu'),
     rejectReason: String(d.rejectReason || ''),
     createdAt: toDate(d.createdAt),
