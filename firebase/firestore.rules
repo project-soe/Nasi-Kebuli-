@@ -1,16 +1,28 @@
-rules_version = '2';                                                                                                                                                                    // Tempel isi file ini di: Firebase Console > Firestore Database > Rules > Publish
+rules_version = '2';
+
+// Tempel isi file ini di: Firebase Console > Firestore Database > Rules > Publish
 //
 // Ringkasan keamanan:
 // - Pelanggan boleh MEMBUAT pesanan, tetapi server (aturan ini) memeriksa SETIAP baris:
-//   harga dan nama harus sama dengan menu, jumlah 1-20, dan total harus sama dengan        //   jumlah (harga x jumlah) + ongkos kirim. Ongkir dan metode bayar juga harus sesuai pengaturan toko.                                                                                 //   Harga dari browser tidak dipercaya.
-// - Data pribadi (nama, HP, catatan) hanya ada di "orders" yang hanya bisa dibaca admin.   // - Pelanggan memantau status lewat "orderStatus": salinan publik TANPA data pribadi,
-//   dibaca lewat ID acak yang hanya ia ketahui.                                            service cloud.firestore {
+//   harga dan nama harus sama dengan menu, jumlah 1-20, dan total harus sama dengan
+//   jumlah (harga x jumlah) + ongkos kirim. Ongkir dan metode bayar juga harus sesuai pengaturan toko.
+//   Harga dari browser tidak dipercaya.
+// - Data pribadi (nama, HP, catatan) hanya ada di "orders" yang hanya bisa dibaca admin.
+// - Pelanggan memantau status lewat "orderStatus": salinan publik TANPA data pribadi,
+//   dibaca lewat ID acak yang hanya ia ketahui.
+service cloud.firestore {
   match /databases/{database}/documents {
-                                                                                                // ---------- fungsi bantu ----------
-                                                                                                // Admin = akun dengan dokumen admins/{uid}. Dokumen itu hanya bisa dibuat lewat Firebase Console.                                                                                      function isAdmin() {
-      return request.auth != null                                                                   && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
-    }                                                                                       
-    // Pengaturan toko menentukan: toko buka, opsi ambil/antar yang aktif, dan ongkos kirim.    // Ongkos kirim di pesanan HARUS sama dengan pengaturan (bukan angka dari browser).
+
+    // ---------- fungsi bantu ----------
+
+    // Admin = akun dengan dokumen admins/{uid}. Dokumen itu hanya bisa dibuat lewat Firebase Console.
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Pengaturan toko menentukan: toko buka, opsi ambil/antar yang aktif, dan ongkos kirim.
+    // Ongkos kirim di pesanan HARUS sama dengan pengaturan (bukan angka dari browser).
     // Bila pengaturan toko belum dibuat: toko dianggap buka, dua opsi aktif, ongkir 0.
     function settingsMatch(d, st) {
       return (st.get('isOpen', true) != false

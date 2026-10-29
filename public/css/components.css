@@ -816,3 +816,47 @@
   width: 20px;
   height: 20px;
 }
+
+/* =====================================================
+   KREDIT PENGEMBANG (kecil, redup, di paling bawah footer)
+   Dikendalikan lewat CREDIT di js/core/config.js.
+   Logo: simbol "i-soe" di assets/icons/sprite.svg (warna mengikuti teks).
+   ===================================================== */
+.site-footer .site-credit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: fit-content;
+  margin: var(--space-3) auto 0;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--fs-xs);
+  line-height: 1;
+  color: var(--text-on-dark);
+  opacity: 0.45;
+  text-decoration: none;
+  transition: opacity var(--dur-normal) var(--ease-out);
+}
+
+.site-footer a.site-credit:hover,
+.site-footer a.site-credit:focus-visible {
+  color: var(--text-on-dark);
+  opacity: 0.85;
+}
+
+.site-credit__mark {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: inherit;
+}
+
+.site-credit__text strong {
+  font-weight: var(--fw-semibold);
+}
+
+@media print {
+  .site-footer .site-credit {
+    display: none;
+  }
+}

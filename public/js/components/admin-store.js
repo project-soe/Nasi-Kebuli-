@@ -35,6 +35,14 @@ export function initStore({ container }) {
   });
   inputs.fulfillment = pickup; // untuk fokus saat error
 
+  const preorder = h('input', { id: 's-preorder', type: 'checkbox' });
+  const preorderClosed = h('input', { id: 's-preorderClosed', type: 'checkbox' });
+  inputs.preorder = preorder;
+  inputs.minLeadHours = h('input', { id: 's-minLeadHours', type: 'text', inputmode: 'numeric', placeholder: '2' });
+  inputs.maxAdvanceDays = h('input', { id: 's-maxAdvanceDays', type: 'text', inputmode: 'numeric', placeholder: '14' });
+  inputs.slotStart = h('input', { id: 's-slotStart', type: 'time' });
+  inputs.slotEnd = h('input', { id: 's-slotEnd', type: 'time' });
+
   const payCash = h('input', { id: 's-payCash', type: 'checkbox' });
   const payTransfer = h('input', { id: 's-payTransfer', type: 'checkbox' });
   const payQris = h('input', { id: 's-payQris', type: 'checkbox' });
@@ -76,6 +84,15 @@ export function initStore({ container }) {
     field('qrisImage', 'Gambar QRIS', inputs.qrisImage,
       'Wajib bila QRIS aktif. Simpan gambar di public/assets/images/branding/ (push ke GitHub), lalu tulis jalurnya di sini. Boleh juga tautan https://.'),
     field('paymentNote', 'Catatan pembayaran (opsional)', inputs.paymentNote),
+    h('div', { class: 'field', dataset: { field: 'preorder' } },
+      h('span', { class: 'field__label', text: 'Pesanan terjadwal (pre-order)' }),
+      h('label', { class: 'admin-check', for: 's-preorder' }, preorder, h('span', { text: 'Pelanggan boleh memilih tanggal dan jam ambil/antar' })),
+      h('label', { class: 'admin-check', for: 's-preorderClosed' }, preorderClosed, h('span', { text: 'Boleh dijadwalkan walau toko sedang tutup' })),
+      h('span', { class: 'field__error', role: 'alert' })),
+    field('minLeadHours', 'Pesan paling lambat (jam sebelumnya)', inputs.minLeadHours, 'Contoh 2 = jadwal paling cepat 2 jam dari sekarang. Isi 0-72.'),
+    field('maxAdvanceDays', 'Bisa dijadwalkan sampai (hari ke depan)', inputs.maxAdvanceDays, 'Isi 1-59.'),
+    field('slotStart', 'Jam ambil/antar paling awal', inputs.slotStart),
+    field('slotEnd', 'Jam ambil/antar paling akhir', inputs.slotEnd, 'Pilihan jam muncul setiap 30 menit di antara dua jam ini.'),
     field('closedMessage', 'Pesan saat toko tutup', inputs.closedMessage),
     save);
   container.replaceChildren(form);
@@ -101,6 +118,12 @@ export function initStore({ container }) {
     inputs.transferInfo.value = store.transferInfo || '';
     inputs.qrisImage.value = store.qrisImage || '';
     inputs.paymentNote.value = store.paymentNote || '';
+    preorder.checked = store.preorderEnabled === true;
+    preorderClosed.checked = store.preorderWhenClosed === true;
+    inputs.minLeadHours.value = String(store.minLeadHours ?? 2);
+    inputs.maxAdvanceDays.value = String(store.maxAdvanceDays ?? 14);
+    inputs.slotStart.value = store.slotStart || '10:00';
+    inputs.slotEnd.value = store.slotEnd || '20:00';
   }
 
   form.addEventListener('submit', async (event) => {
@@ -121,6 +144,12 @@ export function initStore({ container }) {
       transferInfo: inputs.transferInfo.value.trim(),
       qrisImage: inputs.qrisImage.value.trim(),
       paymentNote: inputs.paymentNote.value.trim(),
+      preorderEnabled: preorder.checked,
+      preorderWhenClosed: preorder.checked && preorderClosed.checked,
+      minLeadHours: Number(String(inputs.minLeadHours.value).replace(/\D/g, '')) || 0,
+      maxAdvanceDays: Number(String(inputs.maxAdvanceDays.value).replace(/\D/g, '')) || 0,
+      slotStart: inputs.slotStart.value,
+      slotEnd: inputs.slotEnd.value,
     };
     const errors = {};
     if (values.name.length < 2) errors.name = 'Nama toko minimal 2 huruf.';
@@ -134,6 +163,13 @@ export function initStore({ container }) {
     }
     if (values.paymentQris && !safeImageUrl(values.qrisImage)) {
       errors.qrisImage = 'Isi jalur gambar QRIS (mis. assets/images/branding/qris.jpg) atau tautan https://.';
+    }
+    if (values.preorderEnabled) {
+      if (values.minLeadHours > 72) errors.minLeadHours = 'Maksimal 72 jam.';
+      if (values.maxAdvanceDays < 1 || values.maxAdvanceDays > 59) errors.maxAdvanceDays = 'Isi antara 1 dan 59 hari.';
+      if (!values.slotStart) errors.slotStart = 'Isi jam paling awal.';
+      if (!values.slotEnd) errors.slotEnd = 'Isi jam paling akhir.';
+      else if (values.slotStart && values.slotStart >= values.slotEnd) errors.slotEnd = 'Jam akhir harus setelah jam awal.';
     }
     if (values.deliveryFee > 500000) errors.deliveryFee = 'Ongkos kirim maksimal Rp 500.000.';
 

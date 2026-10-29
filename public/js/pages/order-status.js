@@ -7,6 +7,7 @@ import { subscribeStore } from '../services/store-service.js';
 import { subscribeOrder, orderCode, whatsappUrl } from '../services/order-service.js';
 import { showToast } from '../components/toast.js';
 import { createPaymentInfo } from '../components/payment-info.js';
+import { formatSchedule } from '../core/schedule.js';
 
 const root = document.getElementById('status-root');
 const titleEl = document.getElementById('status-title');
@@ -91,7 +92,7 @@ function render(order) {
       h('div', { class: 'status-card__head' },
         h('span', { class: 'status-card__code', text: `Kode ${code}` }),
         h('p', { class: 'status-card__message', text: messageFor(order) }),
-        h('span', { class: 'status-card__time', text: [`Dipesan ${formatDateTime(order.createdAt)}`, fulfillmentText(order)].filter(Boolean).join(' \u00b7 ') })),
+        h('span', { class: 'status-card__time', text: [`Dipesan ${formatDateTime(order.createdAt)}`, fulfillmentText(order), order.scheduledFor ? `Jadwal ${formatSchedule(order.scheduledFor)}` : ''].filter(Boolean).join(' \u00b7 ') })),
       rejected
         ? (order.rejectReason ? h('p', { class: 'status-card__reason', text: `Alasan: ${order.rejectReason}` }) : null)
         : track(order.status)),

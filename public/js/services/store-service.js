@@ -19,7 +19,19 @@ const DEFAULT_STORE = {
   transferInfo: '',
   qrisImage: '',
   paymentNote: '',
+  preorderEnabled: false,
+  preorderWhenClosed: false,
+  minLeadHours: 2,
+  maxAdvanceDays: 14,
+  slotStart: '10:00',
+  slotEnd: '20:00',
 };
+
+const clampInt = (value, min, max, fallback) => {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+};
+const hhmm = (value, fallback) => (/^\d{1,2}:\d{2}$/.test(String(value || '')) ? String(value) : fallback);
 
 function normalize(data = {}) {
   const text = (v, fallback) => (typeof v === 'string' && v.trim() ? v.trim() : fallback);
@@ -41,6 +53,12 @@ function normalize(data = {}) {
     transferInfo: text(data.transferInfo, ''),
     qrisImage: text(data.qrisImage, ''),
     paymentNote: text(data.paymentNote, ''),
+    preorderEnabled: data.preorderEnabled === true,
+    preorderWhenClosed: data.preorderWhenClosed === true,
+    minLeadHours: clampInt(data.minLeadHours, 0, 72, 2),
+    maxAdvanceDays: clampInt(data.maxAdvanceDays, 1, 59, 14),
+    slotStart: hhmm(data.slotStart, '10:00'),
+    slotEnd: hhmm(data.slotEnd, '20:00'),
   };
 }
 

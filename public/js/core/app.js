@@ -1,5 +1,6 @@
 // core/app.js - fungsi bersama semua halaman
-import { STORE } from './config.js';
+import { STORE, CREDIT } from './config.js';
+import { h, icon } from './dom.js';
 
 /** Isi teks toko (nama, jam, alamat) ke elemen ber-atribut data-store-* */
 export function applyStoreInfo(store = STORE) {
@@ -78,12 +79,35 @@ export function initSplashCleanup() {
   });
 }
 
+/**
+ * Kredit pengembang kecil di bawah footer ("Website oleh Soe" + logo).
+ * Dimatikan lewat CREDIT.enabled = false di core/config.js.
+ */
+export function applyCredit(credit = CREDIT) {
+  if (!credit?.enabled) return;
+  document.querySelectorAll('.site-footer .container').forEach((box) => {
+    if (box.querySelector('.site-credit')) return;
+    const content = [
+      icon('i-soe', 'site-credit__mark'),
+      h('span', { class: 'site-credit__text' }, `${credit.label} `, h('strong', { text: credit.name })),
+    ];
+    const el = credit.url
+      ? h('a', {
+          class: 'site-credit', href: credit.url, target: '_blank', rel: 'noopener noreferrer',
+          'aria-label': `${credit.label} ${credit.name}`,
+        }, ...content)
+      : h('span', { class: 'site-credit' }, ...content);
+    box.append(el);
+  });
+}
+
 /** Jalankan semua fungsi umum */
 export function bootCommon() {
   applyStoreInfo();
   applyWhatsAppLinks();
   initReveal();
   initSplashCleanup();
+  applyCredit();
   const year = document.getElementById('year');
   if (year) year.textContent = new Date().getFullYear();
 }

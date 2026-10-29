@@ -26,6 +26,7 @@ export function normalizeOrder(id, d = {}) {
     deliveryFee: Number(d.deliveryFee) || 0,
     paymentMethod: ['tunai', 'transfer', 'qris'].includes(d.paymentMethod) ? d.paymentMethod : '',
     paid: d.paid === true,
+    scheduledFor: toDate(d.scheduledFor),
     status: String(d.status || 'menunggu'),
     createdAt: toDate(d.createdAt),
     rejectReason: String(d.rejectReason || ''),
@@ -80,6 +81,7 @@ function publicCopyOf(order, extra = {}) {
     copy.deliveryFee = order.deliveryFee;
   }
   if (order.paymentMethod) copy.paymentMethod = order.paymentMethod;
+  copy.scheduledFor = order.scheduledFor || null;
   return copy;
 }
 
