@@ -139,12 +139,14 @@ service cloud.firestore {
       }
     }
 
-    // Status pesanan untuk pelanggan: tanpa data pribadi
+    // Status pesanan untuk pelanggan: tanpa data pribadi.
+    // Admin harus tetap bisa membuat/update dokumen status yang belum lengkap, termasuk merge.
     match /orderStatus/{orderId} {
       allow get: if true;
       allow list: if isAdmin();
       allow create: if isAdmin() || validStatusDoc(request.resource.data, orderId);
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin() || validStatusDoc(request.resource.data, orderId);
+      allow delete: if isAdmin();
     }
 
     match /admins/{uid} {
