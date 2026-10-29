@@ -387,13 +387,18 @@ describe('hak akses baca dan ubah', () => {
 
   it('admin bisa membaca, melihat daftar, dan mengubah status', async () => {
     await seedOrder();
-    await assertSucceeds(getDoc(doc(admin(), 'orders', id)));
-    await assertSucceeds(getDocs(collection(admin(), 'orders')));
+    const db = admin();
+    const orderRef = doc(db, 'orders', id);
+    const statusRef = doc(db, 'orderStatus', id);
+    const historyColl = collection(db, 'orders', id, 'history');
 
-    const batch = writeBatch(admin());
-    batch.update(doc(admin(), 'orders', id), { status: 'diterima', paid: true });
-    batch.set(doc(admin(), 'orderStatus', id), { status: 'diterima', paid: true }, { merge: true });
-    batch.set(doc(collection(doc(admin(), 'orders', id), 'history')), { from: 'menunggu', to: 'diterima', at: serverTimestamp() });
+    await assertSucceeds(getDoc(orderRef));
+    await assertSucceeds(getDocs(collection(db, 'orders')));
+
+    const batch = writeBatch(db);
+    batch.update(orderRef, { status: 'diterima', paid: true });
+    batch.set(statusRef, { status: 'diterima', paid: true }, { merge: true });
+    batch.set(doc(historyColl, 'event-1'), { from: 'menunggu', to: 'diterima', at: serverTimestamp() });
     await assertSucceeds(batch.commit());
   });
 
