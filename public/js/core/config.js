@@ -10,3 +10,18 @@ export const STORE = {
   address: 'Alamat toko diisi dari Google Sheets',
   defaultMessage: 'Halo Kebuli Ikhsan, saya ingin bertanya.',
 };
+
+// Kredit pengembang: tulisan kecil "Website oleh ..." di bagian paling bawah halaman publik.
+// Sengaja kecil dan redup agar tidak mengganggu pengunjung maupun pemilik toko.
+//   enabled: false  -> kredit dimatikan sepenuhnya (mis. bila klien meminta tanpa kredit)
+//   name            -> nama brand yang tampil (GANTI bila brand-mu bukan "Soe")
+//   url             -> tautan saat kredit diklik: situs/portofolio, atau WhatsApp,
+//                      mis. 'https://wa.me/6281234567890?text=Halo%2C%20saya%20tertarik%20membuat%20website'
+//                      Kosongkan ('') bila tidak ingin ada tautan.
+// Logo ada di public/assets/images/branding/soe-mark.svg
+export const CREDIT = {
+  enabled: true,
+  label: 'Website oleh',
+  name: 'SS',
+  url: '',
+};

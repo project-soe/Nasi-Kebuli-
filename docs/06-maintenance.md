@@ -16,6 +16,14 @@
 Ganti blok `.photo-ph.hero__photo` di `public/index.html` dengan:
 `<img class="hero__photo" src="assets/images/hero/hero.jpg" alt="Nasi kebuli kambing" width="800" height="800">`
 
+## Kredit pengembang (logo "Website oleh ...")
+Tulisan kecil dan redup di paling bawah footer halaman publik (beranda, menu, checkout, status pesanan).
+Panel admin tidak memuatnya. Diatur di `public/js/core/config.js` pada `CREDIT`:
+- `enabled: false` mematikan kredit sepenuhnya (mis. bila klien meminta tanpa kredit)
+- `name` nama brand, `label` tulisan pengantar, `url` tautan saat diklik (kosong = tanpa tautan)
+Logo: `public/assets/images/branding/soe-mark.svg` (vektor; warnanya mengikuti teks sekitar).
+Berkas logo asli: `docs/brand/soe-logo-original.jpg`.
+
 ## Mengganti warna / font
 Hanya edit `public/css/tokens.css`.
 
