@@ -109,11 +109,12 @@ service cloud.firestore {
       let orderExists = exists(/databases/$(database)/documents/orders/$(orderId));
       let orderData = orderExists ? get(/databases/$(database)/documents/orders/$(orderId)).data : null;
 
-      return d.keys().hasOnly(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
+      return orderExists
+        && d.keys().hasOnly(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
         && d.keys().hasAll(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
         && d.status == 'menunggu'
         && d.createdAt == request.time
-        && (!orderExists || statusMatchesOrder(d, orderData));
+        && statusMatchesOrder(d, orderData);
     }
 
     // ---------- koleksi ----------
@@ -147,9 +148,13 @@ service cloud.firestore {
     match /orderStatus/{orderId} {
       allow get: if true;
       allow list: if isAdmin();
-      allow create: if isAdmin() || validStatusDoc(request.resource.data, orderId);
+      allow create: if isAdmin() || (
+        validStatusDoc(request.resource.data, orderId)
+        && existsAfter(/databases/$(database)/documents/orders/$(orderId))
+      );
       allow update: if isAdmin() || (
         validStatusDoc(request.resource.data, orderId)
+        && exists(/databases/$(database)/documents/orders/$(orderId))
         && resource.data.status == 'menunggu'
       );
       allow delete: if isAdmin();
