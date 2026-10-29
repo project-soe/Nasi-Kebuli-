@@ -106,11 +106,14 @@ service cloud.firestore {
     }
 
     function validStatusDoc(d, orderId) {
+      let orderExists = exists(/databases/$(database)/documents/orders/$(orderId));
+      let orderData = orderExists ? get(/databases/$(database)/documents/orders/$(orderId)).data : null;
+
       return d.keys().hasOnly(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
         && d.keys().hasAll(['items', 'total', 'status', 'createdAt', 'fulfillment', 'deliveryFee', 'paymentMethod'])
         && d.status == 'menunggu'
         && d.createdAt == request.time
-        && statusMatchesOrder(d, getAfter(/databases/$(database)/documents/orders/$(orderId)).data);
+        && (!orderExists || statusMatchesOrder(d, orderData));
     }
 
     // ---------- koleksi ----------
@@ -145,7 +148,10 @@ service cloud.firestore {
       allow get: if true;
       allow list: if isAdmin();
       allow create: if isAdmin() || validStatusDoc(request.resource.data, orderId);
-      allow update: if isAdmin() || validStatusDoc(request.resource.data, orderId);
+      allow update: if isAdmin() || (
+        validStatusDoc(request.resource.data, orderId)
+        && resource.data.status == 'menunggu'
+      );
       allow delete: if isAdmin();
     }
 
